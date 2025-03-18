@@ -1,5 +1,5 @@
 import express from "express";
-import connection from './database.js';
+
 const router = express.Router() // chercher url sur laquelle on est pour traiter ls data
 
 router.get("/", (req, res) => {
