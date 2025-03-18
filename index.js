@@ -1,31 +1,7 @@
-// import express from 'express';
-// import { connection } from './connect.js';
-// import users from './routes/users.js';
-
-// const port = process.env.PORT || 5000;
-// const app = express();
-
-// app.use(express.json()); // Pour gérer le JSON dans les requêtes
-
-// app.get("/", (req, res) => {
-//     res.json({ message: "Bienvenue sur notre API en Node.js" });
-// });
-// // Routes
-// app.use("/users", users);
-// // try {
-// //     app.use(connection);
-// // } catch (e) {
-// //     console.log(e);
-// // }
-
-// app.listen(port, () => {
-//     console.log(`Serveur en ligne sur le port ${port} !`);
-// });
-
-
 import express from "express";
-import users from "./routes/users.js";
+import authRoutes from "./routes/auth.js";
 import pool, { insertUser } from "./database.js"; // Import de insertUser
+import { verifyToken, isAdmin } from "./middlewares/authMiddleware.js"; // Import des middlewares
 
 const port = process.env.PORT || 5000;
 const app = express();
@@ -42,13 +18,22 @@ async function checkDatabaseConnection() {
 }
 checkDatabaseConnection();
 
+// Pour accepter le JSON dans les requêtes
+app.use(express.json());
+
+
 // Route Home (de base)
 app.get("/", (req, res) => {
     res.json({ message: "Bienvenue sur notre API en Node JS !" });
 });
 
-// Route users
-app.use("/users", users);
+//  Routes d'authentification
+app.use("/auth", authRoutes); 
+
+// Exemple de route protégée
+app.get("/admin-data", verifyToken, isAdmin, (req, res) => {
+    res.json({ message: "Bienvenue sur la route admin, vous avez les bons droits !" });
+});
 
 // Route pour tester la connexion à MySQL
 app.get("/test-db", async (req, res) => {
@@ -62,14 +47,14 @@ app.get("/test-db", async (req, res) => {
 });
 
 // Route add user name Bob
-app.get("/add-user", async (req, res) => {
-    try {
-        const userId = await insertUser("Bob");
-        res.json({ message: "Utilisateur ajouté", id: userId });
-    } catch (err) {
-        res.status(500).json({ message: "Erreur lors de l'ajout de l'utilisateur" });
-    }
-});
+// app.get("/add-user", async (req, res) => {
+//     try {
+//         const userId = await insertUser("Bob");
+//         res.json({ message: "Utilisateur ajouté", id: userId });
+//     } catch (err) {
+//         res.status(500).json({ message: "Erreur lors de l'ajout de l'utilisateur" });
+//     }
+// });
 
 // Démarrer le serveur
 app.listen(port, () => {

@@ -25,5 +25,32 @@ Voir où le volume est stocké = docker volume inspect mysql_data
 
 VOIR LOGS = docker compose logs -f
 
+==========================================================================
 liste : id, name, prenom, email, genre(f/M/O), SexualPref, age, password, 
         nblike, tags, famerating, biography, location.
+
+==========================================================================
+                      JWT (JSON Web Token) 
+
+jeton sécurisé qui permet d'authentifier un utilisateur sans 
+stocker son état côté serveur. tilisé pour la connexion des 
+utilisateurs et la gestion des permissions.
+
+Quand un utilisateur se connecte, le serveur génère un JWT, qui 
+est ensuite envoyé au client (navigateur, application mobile, etc.).
+À chaque requête protégée, le client envoie ce token pour prouver 
+son identité.
+
+STRUCTURATION 
+
+JWT = chaîne de caractères encodée 3 parties, séparées par des points 
+  ex = xxxxxxxx.yyyyyyyy.zzzzzzzz
+        |          |          |
+      HEADER    PLAYLOAD    SIGNATURE
+        |          |          |
+        |          |          |
+        |          |      (verif authenticiter)
+        |          |
+        |  (donnee utilisateur: ID...)
+        |
+(info algo utiliser)
