@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0  # Utilise MySQL 8
+    container_name: matcha_mysql
+    restart: unless-stopped  # Redémarre sauf arrêt manuel
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword  # Change par un mot de passe sécurisé
+      MYSQL_DATABASE: matcha
+      MYSQL_USER: matcha_user
+      MYSQL_PASSWORD: matcha_password
+    ports:
+      - "3306:3306"  # Permet d’accéder à MySQL depuis ton PC
+    volumes:
+      - mysql_data:/var/lib/mysql  # Volume persistant
+
+volumes:
+  mysql_data:

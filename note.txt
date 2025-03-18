@@ -1,0 +1,29 @@
+DATABASE
+creation d'un docker pour contenir la base de donnee mysql 
+car pas de droit sudo a 42
+
+* creer un docker compose
+* lancer le docker : docker-compose up -d
+* eteindre le docker : docker-compose down
+
+creation database :
+
+1 Lancer le docker = docker compose up -d
+2 lister les dockers (etre sur qu'il est lancer) = docker ps
+3 Connexion MYSQL = docker exec -it matcha_mysql mysql -u matcha_user -p
+  (mot de passe : matcha_password)
+
+4 Arreter le docker = (avant quitter mysql avec "exit;")
+                    = docker compose down
+
+
+Réinitialisation complète (tt donnee) = docker compose down -v
+
+
+Liste les volumes Docker = docker volume ls 
+Voir où le volume est stocké = docker volume inspect mysql_data 
+
+VOIR LOGS = docker compose logs -f
+
+liste : id, name, prenom, email, genre(f/M/O), SexualPref, age, password, 
+        nblike, tags, famerating, biography, location.
