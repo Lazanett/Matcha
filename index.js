@@ -25,7 +25,7 @@
 
 import express from "express";
 import users from "./routes/users.js";
-import pool from "./database.js"; // Import de la connexion MySQL
+import pool, { insertUser } from "./database.js"; // Import de insertUser
 
 const port = process.env.PORT || 5000;
 const app = express();
@@ -42,6 +42,7 @@ async function checkDatabaseConnection() {
 }
 checkDatabaseConnection();
 
+// Route Home (de base)
 app.get("/", (req, res) => {
     res.json({ message: "Bienvenue sur notre API en Node JS !" });
 });
@@ -57,6 +58,16 @@ app.get("/test-db", async (req, res) => {
     } catch (err) {
         console.error("❌ Erreur lors de la requête:", err);
         res.status(500).send("❌ Erreur de connexion à la base de données");
+    }
+});
+
+// Route add user name Bob
+app.get("/add-user", async (req, res) => {
+    try {
+        const userId = await insertUser("Bob");
+        res.json({ message: "Utilisateur ajouté", id: userId });
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors de l'ajout de l'utilisateur" });
     }
 });
 

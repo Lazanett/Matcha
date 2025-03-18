@@ -24,7 +24,21 @@ async function checkConnection() {
   }
 }
 
-
 checkConnection();
+
+// Fonction pour insérer un utilisateur avec uniquement un nom
+export async function insertUser(nom) {
+  try {
+      const [result] = await pool.query(
+          "INSERT INTO utilisateurs (nom) VALUES (?)",
+          [nom]
+      );
+      console.log(`✅ Utilisateur ajouté avec l'ID ${result.insertId}`);
+      return result.insertId;
+  } catch (err) {
+      console.error("❌ Erreur lors de l'insertion de l'utilisateur:", err);
+      throw err;
+  }
+}
 
 export default pool;
