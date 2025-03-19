@@ -15,6 +15,7 @@ creation database :
 
 4 Arreter le docker = (avant quitter mysql avec "exit;")
                     = docker compose down
+                    = si marche pas = docker stop matcha_mysql
 
 
 Réinitialisation complète (tt donnee) = docker compose down -v
@@ -54,3 +55,22 @@ JWT = chaîne de caractères encodée 3 parties, séparées par des points
         |  (donnee utilisateur: ID...)
         |
 (info algo utiliser)
+=========================================================================
+                    THUNDER client
+
+Sert a verif si requete sur base de donnee.
+Pas postman car pas droit sudo donc pas arriver a instalation, 
+1 Changer la methode (post, get),
+2 Mettre d'url (ex : http://localhost:5000/auth/signup)
+3 Aller de "Body" -> JSON et mettre un contenu
+4 Appuyer sur 'SEND'
+
+
+==========================================================================
+                  AUTHENTIFICATION
+
+✅ Créer un utilisateur avec un UUID unique lors de l'inscription.
+✅ Stocker l'utilisateur en base de données avec un mot de passe hashé.
+✅ Générer un JWT contenant l'UUID de l'utilisateur lors de la connexion.
+✅ Vérifier le JWT avec un middleware et protéger une route.
+✅ Accéder à ta route protégée et voir l'UUID de l'utilisateur authentifié.

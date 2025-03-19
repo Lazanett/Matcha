@@ -1,26 +1,38 @@
 import jwt from "jsonwebtoken";
 
 // Middleware pour vérifier le token JWT
-export const verifyToken = (req, res, next) => {
-    const token = req.headers["authorization"]?.split(" ")[1];  // Récupérer le token de l'en-tête "Authorization"
+// const verifyToken = (req, res, next) => {
+//     const token = req.headers["authorization"];
 
+//     if (!token) {
+//         return res.status(403).json({ message: "Token manquant" });
+//     }
+
+//     // Décoder le token et vérifier la validité
+//     jwt.verify(token, "ton_secret_jwt", (err, decoded) => {
+//         if (err) {
+//             return res.status(401).json({ message: "Token invalide" });
+//         }
+
+//         // Ajouter les informations de l'utilisateur (ici UUID) au `req` pour les utiliser après
+//         req.user = decoded;  // `decoded` contient l'UUID
+//         next(); // Continuer la requête
+//     });
+// };
+const verifyToken = (req, res, next) => {
+    const token = req.headers["authorization"];
     if (!token) {
-        return res.status(403).json({ message: "Token manquant" });
+        return res.status(403).json({ message: "Accès refusé, token manquant." });
     }
 
-    try {
-        const decoded = jwt.verify(token, "ton_secret_jwt");  // Vérification du token
-        req.user = decoded;  // Ajouter les informations de l'utilisateur à la requête
-        next();  // Passer au prochain middleware ou route
-    } catch (err) {
-        return res.status(401).json({ message: "Token invalide" });
-    }
-};
+    const tokenValue = token.split(" ")[1];  // On récupère le token après le mot "Bearer"
 
-// Middleware pour vérifier si l'utilisateur a le rôle "admin"
-export const isAdmin = (req, res, next) => {
-    if (req.user.role !== "admin") {
-        return res.status(403).json({ message: "Accès interdit, vous devez être admin" });
-    }
-    next();
+    jwt.verify(tokenValue, "ton_secret_jwt", (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ message: "Token invalide" });
+        }
+        req.user = decoded;  // On stocke les données du token dans req.user
+        next();  // On passe à la prochaine étape de la requête
+    });
 };
+export default verifyToken;

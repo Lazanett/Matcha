@@ -1,7 +1,7 @@
 import express from "express";
 import authRoutes from "./routes/auth.js";
 import pool, { insertUser } from "./database.js"; // Import de insertUser
-import { verifyToken, isAdmin } from "./middlewares/authMiddleware.js"; // Import des middlewares
+import verifyToken from "./middlewares/authMiddleware.js"; // Import des middlewares
 
 const port = process.env.PORT || 5000;
 const app = express();
@@ -31,9 +31,9 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes); 
 
 // Exemple de route protégée
-app.get("/admin-data", verifyToken, isAdmin, (req, res) => {
-    res.json({ message: "Bienvenue sur la route admin, vous avez les bons droits !" });
-});
+// app.get("/admin-data", verifyToken, isAdmin, (req, res) => {
+//     res.json({ message: "Bienvenue sur la route admin, vous avez les bons droits !" });
+// });
 
 // Route pour tester la connexion à MySQL
 app.get("/test-db", async (req, res) => {
@@ -45,16 +45,6 @@ app.get("/test-db", async (req, res) => {
         res.status(500).send("❌ Erreur de connexion à la base de données");
     }
 });
-
-// Route add user name Bob
-// app.get("/add-user", async (req, res) => {
-//     try {
-//         const userId = await insertUser("Bob");
-//         res.json({ message: "Utilisateur ajouté", id: userId });
-//     } catch (err) {
-//         res.status(500).json({ message: "Erreur lors de l'ajout de l'utilisateur" });
-//     }
-// });
 
 // Démarrer le serveur
 app.listen(port, () => {
