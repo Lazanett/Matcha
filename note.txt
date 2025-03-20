@@ -27,7 +27,7 @@ Voir où le volume est stocké = docker volume inspect mysql_data
 VOIR LOGS = docker compose logs -f
 
 ==========================================================================
-liste : id, name, prenom, email, genre(f/M/O), SexualPref, age, password, 
+liste : id, name, prenom, pseudo, email, genre(f/M/O), SexualPref, age, password, 
         nblike, tags, famerating, biography, location.
 
 ==========================================================================

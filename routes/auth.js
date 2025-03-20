@@ -4,12 +4,20 @@ import jwt from "jsonwebtoken";
 import pool from "../database.js";  // Ta connexion à la base de données
 import { v4 as uuidv4 } from 'uuid'; // Import de la librairie uuid
 import verifyToken from "../middlewares/authMiddleware.js"; 
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiMTMyMjc2OTYtMDU3NS00MzA0LTg1OGQtYjhmYzc1ZTBjY2ZjIiwiaWF0IjoxNzQyMzk1Njg2LCJleHAiOjE3NDIzOTkyODZ9.awwzUkLe7Usp17IjO7ucl4M1lIQlAd7CxE-qbWue6h4
+
 const router = express.Router();
 
 // Inscription d'un utilisateur (ajout middleware => decripetra le token )
 //creer un UUID = identifint unique de l'utiisateur et generer un token sur JWT avec 
 
+
+// address mail et mot de passe
+// acces app si profil completer / ajout profil complet => default false
+// enoir requete /nouvelle route proteger pour completer le profil = envoie token utlisateur et 
+// body tu envoie integratilier des donnees en plus
+
+
+// creation script qui creer des faux profil (complet) pour faire le matching
 router.post("/signup", async (req, res) => {
     const { nom, mot_de_passe } = req.body;
 
