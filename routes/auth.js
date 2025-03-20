@@ -11,7 +11,9 @@ const router = express.Router();
 //creer un UUID = identifint unique de l'utiisateur et generer un token sur JWT avec 
 
 
-// address mail et mot de passe
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiNDUxMzhlMTYtMmUyNy00Mjk3LTkwMTEtOWQ0MjAxZDQwNmUzIiwiaWF0IjoxNzQyNDcyNzI2LCJleHAiOjE3NDI0NzYzMjZ9.yfLhZziDm--mEWZ48v1_5NQ4H2Rf3f8cBjTeSbwYZXs
+
+// address mail et mot de passe ✅ 
 // acces app si profil completer / ajout profil complet => default false
 // enoir requete /nouvelle route proteger pour completer le profil = envoie token utlisateur et 
 // body tu envoie integratilier des donnees en plus
@@ -19,22 +21,39 @@ const router = express.Router();
 
 // creation script qui creer des faux profil (complet) pour faire le matching
 router.post("/signup", async (req, res) => {
-    const { nom, mot_de_passe } = req.body;
+    const { email, mot_de_passe } = req.body;
 
-    if (!nom || !mot_de_passe) {
-        return res.status(400).json({ message: "Nom et mot de passe requis" });
+    if (!email || !mot_de_passe) {
+        return res.status(400).json({ message: "Email et mot de passe requis" });
+    }
+    else if (!email) {
+        return res.status(400).json({ message: "Email requis" });
+    }
+    else if (!mot_de_passe) {
+        return res.status(400).json({ message: "Mot de passe requis" });
     }
 
     try {
-        const hashedPassword = await bcrypt.hash(mot_de_passe, 10);  // Hash du mot de passe
+
+        // Vérifier si l'email est déjà utilisé
+        const [existingUsers] = await pool.query(
+            "SELECT * FROM utilisateurs WHERE email = ?",
+            [email]
+        );
+        if (existingUsers.length > 0) {
+            return res.status(400).json({ message: "Email déjà utilisé" });
+        }
+
+        // Hash du mot de passe
+        const hashedPassword = await bcrypt.hash(mot_de_passe, 10);  
 
         // Générer un UUID pour l'utilisateur
         const uuid = uuidv4();
 
         // Insertion dans la base de données
         const [result] = await pool.query(
-            "INSERT INTO utilisateurs (uuid, nom, mot_de_passe) VALUES (?, ?, ?)",
-            [uuid, nom, hashedPassword]
+            "INSERT INTO utilisateurs (uuid, email, mot_de_passe) VALUES (?, ?, ?)",
+            [uuid, email, hashedPassword]
         );
 
         // Répondre avec un message de succès
@@ -48,17 +67,23 @@ router.post("/signup", async (req, res) => {
 
 /// Connexion d'un utilisateur
 router.post("/login", async (req, res) => {
-    const { nom, mot_de_passe } = req.body;
+    const { email, mot_de_passe } = req.body;
 
-    if (!nom || !mot_de_passe) {
-        return res.status(400).json({ message: "Nom et mot de passe requis" });
+    if (!email || !mot_de_passe) {
+        return res.status(400).json({ message: "Email et mot de passe requis" });
+    }
+    else if (!email) {
+        return res.status(400).json({ message: "Email requis" });
+    }
+    else if (!mot_de_passe) {
+        return res.status(400).json({ message: "Mot de passe requis" });
     }
 
     try {
-        // Rechercher l'utilisateur par son nom
+        // Rechercher l'utilisateur par son email
         const [rows] = await pool.query(
-            "SELECT * FROM utilisateurs WHERE nom = ?",
-            [nom]
+            "SELECT * FROM utilisateurs WHERE email = ?",
+            [email]
         );
 
         const user = rows[0];
