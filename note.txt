@@ -67,10 +67,52 @@ Pas postman car pas droit sudo donc pas arriver a instalation,
 
 
 ==========================================================================
-                  AUTHENTIFICATION
+                     AUTHENTIFICATION
 
 ✅ Créer un utilisateur avec un UUID unique lors de l'inscription.
 ✅ Stocker l'utilisateur en base de données avec un mot de passe hashé.
 ✅ Générer un JWT contenant l'UUID de l'utilisateur lors de la connexion.
 ✅ Vérifier le JWT avec un middleware et protéger une route.
 ✅ Accéder à ta route protégée et voir l'UUID de l'utilisateur authentifié.
+
+
+
+
+✅ S'inscrire avec email et mot de passe (sujet le demande) 
+✅ inscription puis login puis update info profile (profile full)
+✅ Protection de toutes les routes (middleware) dans arg des routes
+ 
+A FAIRE = docker rendre permanent tables (et ses donnees) dans matcha
+          Faire un script qui creer des utilisateurs random dans matcha
+===========================================================================
+                CREATIONS TABLES user/utilisateurs
+
+CREATE TABLE utilisateurs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    mot_de_passe VARCHAR(255) NOT NULL,
+    nom VARCHAR(100),
+    prenom VARCHAR(100),
+    pseudo VARCHAR(50) UNIQUE,
+    age INT CHECK (age >= 18),
+    genre ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O',
+    prefSex ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O,
+    profil_complet BOOLEAN DEFAULT FALSE
+);
+
+==========================================================================
+                          MATCHING
+
+SUJET = regarder genre de la personne et voir son orientation si O = F/M
+- La même zone géographique que l'utilisateur.
+- Un maximum de tags communs.
+- Un maximum d'indices de notoriété.
+
+recommander d'abord mm zone géographique
+ensuite : par l'age, zone geo, framerating et common tags
+
+doit pouvoir METTRE DES FILTRES DANS LA RECHERCHE : - age, 
+                                                    - zone geo,
+                                                    - framerating,
+                                                    - tags.

@@ -11,8 +11,6 @@ const router = express.Router();
 //creer un UUID = identifint unique de l'utiisateur et generer un token sur JWT avec 
 
 
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiNDUxMzhlMTYtMmUyNy00Mjk3LTkwMTEtOWQ0MjAxZDQwNmUzIiwiaWF0IjoxNzQyNDcyNzI2LCJleHAiOjE3NDI0NzYzMjZ9.yfLhZziDm--mEWZ48v1_5NQ4H2Rf3f8cBjTeSbwYZXs
-
 // address mail et mot de passe ✅ 
 // acces app si profil completer / ajout profil complet => default false
 // enoir requete /nouvelle route proteger pour completer le profil = envoie token utlisateur et 
@@ -111,7 +109,63 @@ router.post("/login", async (req, res) => {
     }
 });
 
-// Route protégée, nécessite un token JWT valide
+// UPDATE_PROFILE
+router.post("/update-profile", verifyToken, async (req, res) => {
+    const { nom, prenom, pseudo, age, genre, prefSex } = req.body;
+    const uuid = req.user.uuid;  // Récupère l'UUID depuis le token
+
+    // Vérification que tous les champs obligatoires sont remplis
+    if (!nom || !prenom || !pseudo || !age || !genre || !prefSex) {
+        return res.status(400).json({ message: "Tous les champs doivent être remplis" });
+    }
+
+    // Vérification des valeurs autorisées pour genre et prefSex
+    const genresValides = ["F", "M", "O"];
+    if (!genresValides.includes(genre) || !genresValides.includes(prefSex)) {
+        return res.status(400).json({ message: "Valeurs de genre ou prefSex invalides" });
+    }
+
+    try {
+        // Mise à jour de l'utilisateur
+        await pool.query(
+            "UPDATE utilisateurs SET nom = ?, prenom = ?, pseudo = ?, age = ?, genre = ?, prefSex = ?, profil_complet = TRUE WHERE uuid = ?",
+            [nom, prenom, pseudo, age, genre, prefSex, uuid]
+        );
+
+        res.json({ message: "Profil mis à jour avec succès", profil_complet: true });
+    } catch (err) {
+        console.error("❌ Erreur lors de la mise à jour du profil:", err);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+});
+
+// REDIR QUAND TT CHAMPS FULL
+router.get("/dashboard", verifyToken, async (req, res) => {
+    const uuid = req.user.uuid;
+
+    try {
+        // Vérifier si le profil est complet
+        const [rows] = await pool.query(
+            "SELECT profil_complet FROM utilisateurs WHERE uuid = ?",
+            [uuid]
+        );
+
+        const user = rows[0];
+        if (!user.profil_complet) {
+            return res.status(403).json({ message: "Veuillez remplir votre profil avant d'accéder à cette page" });
+        }
+
+        // Si le profil est complet, l'utilisateur peut accéder à cette route
+        res.json({ message: "Bienvenue sur le dashboard !" });
+
+    } catch (err) {
+        console.error("❌ Erreur lors de l'accès au dashboard:", err);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+});
+
+
+// Route protégée, nécessite un token JWT valide TEST SI UUID EST VALID
 router.get("/protected", verifyToken, (req, res) => {
     // Une fois que le middleware `verifyToken` a vérifié le token, tu peux accéder à l'UUID
     res.json({
