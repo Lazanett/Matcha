@@ -162,6 +162,10 @@ primary key(userId, tagId));
 INSERT INTO tags (id, name) VALUES 
 (UUID(), 'Netflix'),
 (UUID(), 'Lecture'),
+(UUID(), 'Vegan'),
+(UUID(), 'Geek'),
+(UUID(), 'Tatouage'),
+(UUID(), 'Piercing'),
 (UUID(), 'Sport');
 
 6 ==> ASSOCIER ID USER ET ID TAGS 

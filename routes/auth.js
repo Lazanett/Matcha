@@ -8,12 +8,40 @@ import verifyToken from "../middlewares/authMiddleware.js";
 const router = express.Router();
 //eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiNzQwZDk2ODEtYTc5OC00Y2UwLWI2ZjItOGIyYzg1Y2MxOWM5IiwiaWF0IjoxNzQyNTY5NDM0LCJleHAiOjE3NDI1NzMwMzR9.M6uuJfw2960eOEgrWrSIt0WYbIZ1XfaESIFSyqQn3Hs
 // creation script qui creer des faux profil (complet) pour faire le matching
+
+
+function isStrongPassword(password) {
+    if (password.length < 8) {
+        return { valid: false, message: "Le mot de passe doit contenir au moins 8 caractères." };
+    }
+    if (!/[a-z]/.test(password)) {
+        return { valid: false, message: "Le mot de passe doit contenir au moins une lettre minuscule." };
+    }
+    if (!/[A-Z]/.test(password)) {
+        return { valid: false, message: "Le mot de passe doit contenir au moins une lettre majuscule." };
+    }
+    if (!/\d/.test(password)) {
+        return { valid: false, message: "Le mot de passe doit contenir au moins un chiffre." };
+    }
+    if (!/[@$!%*?&]/.test(password)) {
+        return { valid: false, message: "Le mot de passe doit contenir au moins un caractère spécial (@$!%*?&)." };
+    }
+
+    return { valid: true };
+}
+
 router.post("/signup", async (req, res) => {
     const { email, mot_de_passe, pseudo, nom, prenom } = req.body;
 
     // Vérifications des champs obligatoires
     if (!email || !mot_de_passe || !pseudo || !nom || !prenom) {
         return res.status(400).json({ message: "Tous les champs sont requis" });
+    }
+    
+    // Vérification de la force du mot de passe
+    const passwordCheck = isStrongPassword(mot_de_passe);
+    if (!passwordCheck.valid) {
+        return res.status(400).json({ message: passwordCheck.message });
     }
 
     try {
@@ -57,7 +85,7 @@ router.post("/signup", async (req, res) => {
 });
 
 
-/// Connexion d'un utilisateur
+// Connexion d'un utilisateur
 router.post("/login", async (req, res) => {
     const { pseudo, mot_de_passe } = req.body;
 
@@ -144,7 +172,7 @@ router.post("/update-profile", verifyToken, async (req, res) => {
     }
 });
 
-
+//TAGS 
 router.post('/:userId/tags', verifyToken, async (req, res) => {
     const { userId } = req.params; // Récupérer l'ID de l'utilisateur
     const { tags } = req.body; // Récupérer les tags à associer
