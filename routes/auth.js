@@ -59,23 +59,23 @@ router.post("/signup", async (req, res) => {
 
 /// Connexion d'un utilisateur
 router.post("/login", async (req, res) => {
-    const { email, mot_de_passe } = req.body;
+    const { pseudo, mot_de_passe } = req.body;
 
-    if (!email || !mot_de_passe) {
-        return res.status(400).json({ message: "Email et mot de passe requis" });
+    if (!pseudo || !mot_de_passe) {
+        return res.status(400).json({ message: "Pseudo et mot de passe requis" });
     }
-    else if (!email) {
-        return res.status(400).json({ message: "Email requis" });
+    else if (!pseudo) {
+        return res.status(400).json({ message: "Pseudo requis" });
     }
     else if (!mot_de_passe) {
         return res.status(400).json({ message: "Mot de passe requis" });
     }
 
     try {
-        // Rechercher l'utilisateur par son email
+        // Rechercher l'utilisateur par son pseudo
         const [rows] = await pool.query(
-            "SELECT * FROM utilisateurs WHERE email = ?",
-            [email]
+            "SELECT * FROM utilisateurs WHERE pseudo = ?",
+            [pseudo]
         );
 
         const user = rows[0];
@@ -143,7 +143,6 @@ router.post("/update-profile", verifyToken, async (req, res) => {
         res.status(500).json({ message: "Erreur interne du serveur" });
     }
 });
-
 
 
 router.post('/:userId/tags', verifyToken, async (req, res) => {
