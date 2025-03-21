@@ -105,6 +105,15 @@ CREATE TABLE utilisateurs (
     profil_complet BOOLEAN DEFAULT FALSE
 );
 
+{
+  "nom": "test",
+  "prenom": "test",
+  "pseudo": "test23",
+  "age": 25,
+  "genre": "M",
+  "orientation": "F"
+}
+
 ==========================================================================
                           MATCHING
 

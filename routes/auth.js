@@ -16,7 +16,7 @@ const router = express.Router();
 // enoir requete /nouvelle route proteger pour completer le profil = envoie token utlisateur et 
 // body tu envoie integratilier des donnees en plus
 
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiNDlkZjM4MWEtNDFhMy00MTc1LWE5ZDAtZGNiM2EyMGRmNmIwIiwiaWF0IjoxNzQyNTUzNjEwLCJleHAiOjE3NDI1NTcyMTB9.l-Sad4iUdy0Uo1t2jZTYVROX2lbngMEdb4y9CyuPrw8
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiODU2MWE1ZTktOGQ3ZS00ZjMyLTllYjQtY2U0ZDUxMGI2NjIzIiwiaWF0IjoxNzQyNTYzMjA4LCJleHAiOjE3NDI1NjY4MDh9.9bk7NlBoWsPQCpIkxlAYSiX02wNMlFaZpuGZhSGv-9g
 // creation script qui creer des faux profil (complet) pour faire le matching
 router.post("/signup", async (req, res) => {
     const { email, mot_de_passe } = req.body;
@@ -110,27 +110,27 @@ router.post("/login", async (req, res) => {
 });
 
 // UPDATE_PROFILE
-// changer prefsex par orientation
+// changer orientation par orientation
 router.post("/update-profile", verifyToken, async (req, res) => {
-    const { nom, prenom, pseudo, age, genre, prefSex } = req.body;
+    const { nom, prenom, pseudo, age, genre, orientation } = req.body;
     const uuid = req.user.uuid;  // Récupère l'UUID depuis le token
 
     // Vérification que tous les champs obligatoires sont remplis
-    if (!nom || !prenom || !pseudo || !age || !genre || !prefSex) {
+    if (!nom || !prenom || !pseudo || !age || !genre || !orientation) {
         return res.status(400).json({ message: "Tous les champs doivent être remplis" });
     }
 
-    // Vérification des valeurs autorisées pour genre et prefSex
+    // Vérification des valeurs autorisées pour genre et orientation
     const genresValides = ["F", "M", "O"];
-    if (!genresValides.includes(genre) || !genresValides.includes(prefSex)) {
-        return res.status(400).json({ message: "Valeurs de genre ou prefSex invalides" });
+    if (!genresValides.includes(genre) || !genresValides.includes(orientation)) {
+        return res.status(400).json({ message: "Valeurs de genre ou orientation invalides" });
     }
 
     try {
         // Mise à jour de l'utilisateur
         await pool.query(
-            "UPDATE utilisateurs SET nom = ?, prenom = ?, pseudo = ?, age = ?, genre = ?, prefSex = ? WHERE uuid = ?",
-            [nom, prenom, pseudo, age, genre, prefSex, uuid]
+            "UPDATE utilisateurs SET nom = ?, prenom = ?, pseudo = ?, age = ?, genre = ?, orientation = ? WHERE uuid = ?",
+            [nom, prenom, pseudo, age, genre, orientation, uuid]
         );
 
         // Vérifier si l'utilisateur a des tags associés
@@ -149,8 +149,6 @@ router.post("/update-profile", verifyToken, async (req, res) => {
 });
 
 
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiMGMwYzlkZWQtODM5OS00ODBhLWExMzItZjU4YjgwMmI3MDJhIiwiaWF0IjoxNzQyNTU5OTM3LCJleHAiOjE3NDI1NjM1Mzd9.sG6j9NQopXjSZOWiKM8FODQKmGB7vki7okHBu1a2MWY
-// Route pour associer un utilisateur à des tags
 router.post('/:userId/tags', verifyToken, async (req, res) => {
     const { userId } = req.params; // Récupérer l'ID de l'utilisateur
     const { tags } = req.body; // Récupérer les tags à associer
