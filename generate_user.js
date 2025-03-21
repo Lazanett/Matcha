@@ -6,9 +6,9 @@ import { v4 as uuidv4 } from 'uuid';
 const dbConfig = {
     host: 'localhost',
     port: 3306,
-    user: 'root',
-    password: 'Unmotdep@sse32mysql',
-    database: 'pappers_local',
+    user: 'matcha_user',
+    password: 'matcha_password',
+    database: 'matcha',
 };
 
 async function connectToDB() {
