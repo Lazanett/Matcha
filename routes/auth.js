@@ -16,7 +16,7 @@ const router = express.Router();
 // enoir requete /nouvelle route proteger pour completer le profil = envoie token utlisateur et 
 // body tu envoie integratilier des donnees en plus
 
-
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiNDlkZjM4MWEtNDFhMy00MTc1LWE5ZDAtZGNiM2EyMGRmNmIwIiwiaWF0IjoxNzQyNTUzNjEwLCJleHAiOjE3NDI1NTcyMTB9.l-Sad4iUdy0Uo1t2jZTYVROX2lbngMEdb4y9CyuPrw8
 // creation script qui creer des faux profil (complet) pour faire le matching
 router.post("/signup", async (req, res) => {
     const { email, mot_de_passe } = req.body;
@@ -138,6 +138,44 @@ router.post("/update-profile", verifyToken, async (req, res) => {
         res.status(500).json({ message: "Erreur interne du serveur" });
     }
 });
+
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiNjM2YjViMjYtZjA5Mi00MGQ4LTgyZjktMGZiYTg3YTYyYjY4IiwiaWF0IjoxNzQyNTU2Nzc2LCJleHAiOjE3NDI1NjAzNzZ9.zNGQaIYaRFIsOLM3yPEtgJm1lUQlAtnQ2V9qU_-sWX8
+// Route pour associer un utilisateur à des tags
+router.post('/:userId/tags', verifyToken, async (req, res) => {
+    const { userId } = req.params; // Récupérer l'ID de l'utilisateur
+    const { tags } = req.body; // Récupérer les tags à associer
+
+    if (!tags || !Array.isArray(tags) || tags.length === 0) {
+        return res.status(400).json({ error: 'Vous devez fournir une liste de tags.' });
+    }
+
+    try {
+        // Vérifier si l'utilisateur existe
+        const [userExists] = await pool.query('SELECT id FROM utilisateurs WHERE id = ?', [userId]);
+
+        if (userExists.length === 0) {
+            return res.status(404).json({ error: "Utilisateur non trouvé." });
+        }
+
+        // Vérifier si les tags existent dans la base de données
+        const [tagRows] = await pool.query('SELECT id FROM tags WHERE name IN (?)', [tags]);
+
+        if (tagRows.length === 0) {
+            return res.status(404).json({ error: "Aucun tag trouvé avec ces noms." });
+        }
+
+        // Insérer l'association dans la table `user_tags`
+        const values = tagRows.map(tag => [userId, tag.id]);
+        await pool.query('INSERT INTO user_tags (userId, tagId) VALUES ?', [values]);
+
+        res.status(201).json({ message: 'Tags associés avec succès à l\'utilisateur.' });
+    } catch (error) {
+        console.error('Erreur lors de l\'association des tags :', error.message);
+        console.error('Stack trace:', error.stack);
+        res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    }
+});
+
 
 // REDIR QUAND TT CHAMPS FULL
 router.get("/dashboard", verifyToken, async (req, res) => {

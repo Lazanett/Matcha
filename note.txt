@@ -97,7 +97,7 @@ CREATE TABLE utilisateurs (
     pseudo VARCHAR(50) UNIQUE,
     age INT CHECK (age >= 18),
     genre ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O',
-    prefSex ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O,
+    orientation ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O,
     profil_complet BOOLEAN DEFAULT FALSE
 );
 
@@ -116,3 +116,67 @@ doit pouvoir METTRE DES FILTRES DANS LA RECHERCHE : - age,
                                                     - zone geo,
                                                     - framerating,
                                                     - tags.
+
+=========================================================================
+              ASSOCIATION TAGS ID ET ID D'UN UTILISATEUR
+
+1 ==> Creation table UTILISATEURS == CREATE TABLE utilisateurs (
+                               id INT AUTO_INCREMENT PRIMARY KEY,
+                               uuid VARCHAR(36) NOT NULL UNIQUE,
+                               email VARCHAR(255) NOT NULL UNIQUE,    
+                               mot_de_passe VARCHAR(255) NOT NULL, 
+                               nom VARCHAR(100),     prenom VARCHAR(100),
+                               pseudo VARCHAR(50) UNIQUE,
+                               age INT CHECK (age >= 18),
+                               genre ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O',
+                               orientation ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O',
+                               profil_complet BOOLEAN DEFAULT FALSE );
+
+2 ==> Creation table TAGS == create table tags (
+                        id varchar(36) not null,
+                        name varchar(255), primary key (id),
+                        unique(id));
+
+3 ==> Creation table user_tags(lien entre utlisateurs id et tags id)
+create table user_tags (
+userId varchar(36) not null references users(id),
+tagId varchar(36) not null references tags(id),
+primary key(userId, tagId));
+
+4 ==> Creer des utlisateurs dans utlisateurs (via sql ou requete api)
+
+5 ==> Creer des tags dans tags ==
+INSERT INTO tags (id, name) VALUES 
+(UUID(), 'Netflix'),
+(UUID(), 'Lecture'),
+(UUID(), 'Sport');
+
+6 ==> ASSOCIER ID USER ET ID TAGS 
+     |
+     |    Recup id utlisateurs :
+     ---> SELECT id FROM users WHERE pseudo = 'pseudo du user';
+     |    (renvoie id -> exemple '1')
+     |
+     |    Recup id tags :
+     ---> SELECT id FROM tags WHERE name IN ('Netflix', 'Sport', 'Lecture');
+     |    (renvoie id -> exemple '987654321', '12345', '67890)
+     |
+     |    Association tags/utlisateurs : Netflix id = '987654321'
+     ---> INSERT INTO user_tags (userId, tagId) VALUES 
+         ('1', '987654321');
+            |            |
+            |            |
+            |        ID tag netflix
+            |    
+          ID utilisateur
+
+     |
+     |
+     |    Verrf tag associer a utlisateurs
+     ---> SELECT tags.name 
+          FROM user_tags 
+          JOIN tags ON user_tags.tagId = tags.id
+          WHERE user_tags.userId = '1';
+                                    |
+                                ID utilisateur
+          (renvoie 'netflix')
