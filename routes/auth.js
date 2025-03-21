@@ -1,34 +1,19 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import pool from "../database.js";  // Ta connexion à la base de données
-import { v4 as uuidv4 } from 'uuid'; // Import de la librairie uuid
+import pool from "../database.js";
+import { v4 as uuidv4 } from 'uuid';
 import verifyToken from "../middlewares/authMiddleware.js"; 
 
 const router = express.Router();
-
-// Inscription d'un utilisateur (ajout middleware => decripetra le token )
-//creer un UUID = identifint unique de l'utiisateur et generer un token sur JWT avec 
-
-
-// address mail et mot de passe ✅ 
-// acces app si profil completer / ajout profil complet => default false
-// enoir requete /nouvelle route proteger pour completer le profil = envoie token utlisateur et 
-// body tu envoie integratilier des donnees en plus
-
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiODU2MWE1ZTktOGQ3ZS00ZjMyLTllYjQtY2U0ZDUxMGI2NjIzIiwiaWF0IjoxNzQyNTYzMjA4LCJleHAiOjE3NDI1NjY4MDh9.9bk7NlBoWsPQCpIkxlAYSiX02wNMlFaZpuGZhSGv-9g
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiNzQwZDk2ODEtYTc5OC00Y2UwLWI2ZjItOGIyYzg1Y2MxOWM5IiwiaWF0IjoxNzQyNTY5NDM0LCJleHAiOjE3NDI1NzMwMzR9.M6uuJfw2960eOEgrWrSIt0WYbIZ1XfaESIFSyqQn3Hs
 // creation script qui creer des faux profil (complet) pour faire le matching
 router.post("/signup", async (req, res) => {
-    const { email, mot_de_passe } = req.body;
+    const { email, mot_de_passe, pseudo, nom, prenom } = req.body;
 
-    if (!email || !mot_de_passe) {
-        return res.status(400).json({ message: "Email et mot de passe requis" });
-    }
-    else if (!email) {
-        return res.status(400).json({ message: "Email requis" });
-    }
-    else if (!mot_de_passe) {
-        return res.status(400).json({ message: "Mot de passe requis" });
+    // Vérifications des champs obligatoires
+    if (!email || !mot_de_passe || !pseudo || !nom || !prenom) {
+        return res.status(400).json({ message: "Tous les champs sont requis" });
     }
 
     try {
@@ -42,6 +27,15 @@ router.post("/signup", async (req, res) => {
             return res.status(400).json({ message: "Email déjà utilisé" });
         }
 
+        // Vérifier si le pseudo est déjà utilisé
+        const [existingPseudo] = await pool.query(
+            "SELECT * FROM utilisateurs WHERE pseudo = ?",
+            [pseudo]
+        );
+        if (existingPseudo.length > 0) {
+            return res.status(400).json({ message: "Pseudo déjà utilisé" });
+        }
+
         // Hash du mot de passe
         const hashedPassword = await bcrypt.hash(mot_de_passe, 10);  
 
@@ -50,8 +44,8 @@ router.post("/signup", async (req, res) => {
 
         // Insertion dans la base de données
         const [result] = await pool.query(
-            "INSERT INTO utilisateurs (uuid, email, mot_de_passe) VALUES (?, ?, ?)",
-            [uuid, email, hashedPassword]
+            "INSERT INTO utilisateurs (uuid, email, mot_de_passe, pseudo, nom, prenom) VALUES (?, ?, ?, ?, ?, ?)",
+            [uuid, email, hashedPassword, pseudo, nom, prenom]
         );
 
         // Répondre avec un message de succès
@@ -110,14 +104,13 @@ router.post("/login", async (req, res) => {
 });
 
 // UPDATE_PROFILE
-// changer orientation par orientation
 router.post("/update-profile", verifyToken, async (req, res) => {
-    const { nom, prenom, pseudo, age, genre, orientation } = req.body;
-    const uuid = req.user.uuid;  // Récupère l'UUID depuis le token
+    const { age, genre, orientation } = req.body;
+    const uuid = req.user.uuid; // Récupère l'UUID depuis le token
 
     // Vérification que tous les champs obligatoires sont remplis
-    if (!nom || !prenom || !pseudo || !age || !genre || !orientation) {
-        return res.status(400).json({ message: "Tous les champs doivent être remplis" });
+    if (!age || !genre || !orientation) {
+        return res.status(400).json({ message: "L'âge, le genre et l'orientation sont requis" });
     }
 
     // Vérification des valeurs autorisées pour genre et orientation
@@ -127,26 +120,30 @@ router.post("/update-profile", verifyToken, async (req, res) => {
     }
 
     try {
-        // Mise à jour de l'utilisateur
+        // Mise à jour des champs modifiables
         await pool.query(
-            "UPDATE utilisateurs SET nom = ?, prenom = ?, pseudo = ?, age = ?, genre = ?, orientation = ? WHERE uuid = ?",
-            [nom, prenom, pseudo, age, genre, orientation, uuid]
+            "UPDATE utilisateurs SET age = ?, genre = ?, orientation = ? WHERE uuid = ?",
+            [age, genre, orientation, uuid]
         );
 
         // Vérifier si l'utilisateur a des tags associés
-        const [userTags] = await pool.query('SELECT tagId FROM user_tags WHERE userId = (SELECT id FROM utilisateurs WHERE uuid = ?)', [uuid]);
+        const [userTags] = await pool.query(
+            "SELECT tagId FROM user_tags WHERE userId = (SELECT id FROM utilisateurs WHERE uuid = ?)",
+            [uuid]
+        );
 
         // Si des tags sont associés, mettre profil_complet à true
         if (userTags.length > 0) {
-            await pool.query('UPDATE utilisateurs SET profil_complet = TRUE WHERE uuid = ?', [uuid]);
+            await pool.query("UPDATE utilisateurs SET profil_complet = TRUE WHERE uuid = ?", [uuid]);
         }
 
-        res.json({ message: "Profil mis à jour avec succès", profil_complet: true });
+        res.json({ message: "Profil mis à jour avec succès"});
     } catch (err) {
         console.error("❌ Erreur lors de la mise à jour du profil:", err);
         res.status(500).json({ message: "Erreur interne du serveur" });
     }
 });
+
 
 
 router.post('/:userId/tags', verifyToken, async (req, res) => {
