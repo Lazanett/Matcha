@@ -79,9 +79,13 @@ Pas postman car pas droit sudo donc pas arriver a instalation,
 
 
 ✅ S'inscrire avec email et mot de passe (sujet le demande) 
-✅ inscription puis login puis update info profile (profile full)
+✅ Inscription puis login puis update info profile (profile full)
 ✅ Protection de toutes les routes (middleware) dans arg des routes
- 
+
+✅ Creation tags avec tags tables et user_tags qui relier les utilisateur 
+   et les tags via l'id des user et id des tags (requete api et sql ok)
+✅ profile_complet si tt les champs sont rempli ainsi que les tags
+
 A FAIRE = docker rendre permanent tables (et ses donnees) dans matcha
           Faire un script qui creer des utilisateurs random dans matcha
 ===========================================================================

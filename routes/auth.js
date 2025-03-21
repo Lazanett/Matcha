@@ -110,6 +110,7 @@ router.post("/login", async (req, res) => {
 });
 
 // UPDATE_PROFILE
+// changer prefsex par orientation
 router.post("/update-profile", verifyToken, async (req, res) => {
     const { nom, prenom, pseudo, age, genre, prefSex } = req.body;
     const uuid = req.user.uuid;  // Récupère l'UUID depuis le token
@@ -128,9 +129,17 @@ router.post("/update-profile", verifyToken, async (req, res) => {
     try {
         // Mise à jour de l'utilisateur
         await pool.query(
-            "UPDATE utilisateurs SET nom = ?, prenom = ?, pseudo = ?, age = ?, genre = ?, prefSex = ?, profil_complet = TRUE WHERE uuid = ?",
+            "UPDATE utilisateurs SET nom = ?, prenom = ?, pseudo = ?, age = ?, genre = ?, prefSex = ? WHERE uuid = ?",
             [nom, prenom, pseudo, age, genre, prefSex, uuid]
         );
+
+        // Vérifier si l'utilisateur a des tags associés
+        const [userTags] = await pool.query('SELECT tagId FROM user_tags WHERE userId = (SELECT id FROM utilisateurs WHERE uuid = ?)', [uuid]);
+
+        // Si des tags sont associés, mettre profil_complet à true
+        if (userTags.length > 0) {
+            await pool.query('UPDATE utilisateurs SET profil_complet = TRUE WHERE uuid = ?', [uuid]);
+        }
 
         res.json({ message: "Profil mis à jour avec succès", profil_complet: true });
     } catch (err) {
@@ -139,7 +148,8 @@ router.post("/update-profile", verifyToken, async (req, res) => {
     }
 });
 
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiNjM2YjViMjYtZjA5Mi00MGQ4LTgyZjktMGZiYTg3YTYyYjY4IiwiaWF0IjoxNzQyNTU2Nzc2LCJleHAiOjE3NDI1NjAzNzZ9.zNGQaIYaRFIsOLM3yPEtgJm1lUQlAtnQ2V9qU_-sWX8
+
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiMGMwYzlkZWQtODM5OS00ODBhLWExMzItZjU4YjgwMmI3MDJhIiwiaWF0IjoxNzQyNTU5OTM3LCJleHAiOjE3NDI1NjM1Mzd9.sG6j9NQopXjSZOWiKM8FODQKmGB7vki7okHBu1a2MWY
 // Route pour associer un utilisateur à des tags
 router.post('/:userId/tags', verifyToken, async (req, res) => {
     const { userId } = req.params; // Récupérer l'ID de l'utilisateur
@@ -168,6 +178,14 @@ router.post('/:userId/tags', verifyToken, async (req, res) => {
         const values = tagRows.map(tag => [userId, tag.id]);
         await pool.query('INSERT INTO user_tags (userId, tagId) VALUES ?', [values]);
 
+        // Vérifier si l'utilisateur a maintenant des tags associés et mettre à jour profil_complet
+        const [userTags] = await pool.query('SELECT tagId FROM user_tags WHERE userId = ?', [userId]);
+
+        // Si des tags sont associés, mettre profil_complet à true
+        if (userTags.length > 0) {
+            await pool.query('UPDATE utilisateurs SET profil_complet = TRUE WHERE id = ?', [userId]);
+        }
+
         res.status(201).json({ message: 'Tags associés avec succès à l\'utilisateur.' });
     } catch (error) {
         console.error('Erreur lors de l\'association des tags :', error.message);
@@ -175,6 +193,7 @@ router.post('/:userId/tags', verifyToken, async (req, res) => {
         res.status(500).json({ error: 'Erreur serveur', details: error.message });
     }
 });
+
 
 
 // REDIR QUAND TT CHAMPS FULL
