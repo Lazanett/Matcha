@@ -3,7 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import pool from "../database.js";
 import { v4 as uuidv4 } from 'uuid';
-import verifyToken from "../middlewares/authMiddleware.js"; 
+import verifyToken from "../middlewares/authMiddleware.js";
+import { getPotentialMatches } from '../matching.js';  // L'importation de ta fonction de matching
 
 const router = express.Router();
 //eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiNzQwZDk2ODEtYTc5OC00Y2UwLWI2ZjItOGIyYzg1Y2MxOWM5IiwiaWF0IjoxNzQyNTY5NDM0LCJleHAiOjE3NDI1NzMwMzR9.M6uuJfw2960eOEgrWrSIt0WYbIZ1XfaESIFSyqQn3Hs
@@ -216,6 +217,25 @@ router.post('/:userId/tags', verifyToken, async (req, res) => {
     }
 });
 
+
+router.get('/test-matching/:userId', verifyToken, async (req, res) => {
+    const userId = req.params.userId;
+
+    try {
+        // Appeler la fonction getPotentialMatches et obtenir les résultats
+        const matches = await getPotentialMatches(pool, userId);
+        
+        if (matches.length === 0) {
+            return res.status(404).json({ message: 'Aucun match trouvé' });
+        }
+
+        // Retourner les profils correspondants
+        res.status(200).json(matches);
+    } catch (err) {
+        console.error('Erreur lors de la recherche de matchs:', err);
+        res.status(500).json({ message: 'Erreur serveur lors de la recherche de matchs' });
+    }
+});
 
 
 // REDIR QUAND TT CHAMPS FULL
