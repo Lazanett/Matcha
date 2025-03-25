@@ -101,7 +101,7 @@ CREATE TABLE utilisateurs (
     pseudo VARCHAR(50) UNIQUE,
     age INT CHECK (age >= 18),
     genre ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O',
-    orientation ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O,
+    orientation ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O',
     profil_complet BOOLEAN DEFAULT FALSE
 );
 

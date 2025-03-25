@@ -4,12 +4,8 @@ import jwt from "jsonwebtoken";
 import pool from "../database.js";
 import { v4 as uuidv4 } from 'uuid';
 import verifyToken from "../middlewares/authMiddleware.js";
-import { getPotentialMatches } from '../matching.js';  // L'importation de ta fonction de matching
 
 const router = express.Router();
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiNzQwZDk2ODEtYTc5OC00Y2UwLWI2ZjItOGIyYzg1Y2MxOWM5IiwiaWF0IjoxNzQyNTY5NDM0LCJleHAiOjE3NDI1NzMwMzR9.M6uuJfw2960eOEgrWrSIt0WYbIZ1XfaESIFSyqQn3Hs
-// creation script qui creer des faux profil (complet) pour faire le matching
-
 
 function isStrongPassword(password) {
     if (password.length < 8) {
@@ -132,110 +128,6 @@ router.post("/login", async (req, res) => {
     }
 });
 
-// UPDATE_PROFILE
-router.post("/update-profile", verifyToken, async (req, res) => {
-    const { age, genre, orientation } = req.body;
-    const uuid = req.user.uuid; // Récupère l'UUID depuis le token
-
-    // Vérification que tous les champs obligatoires sont remplis
-    if (!age || !genre || !orientation) {
-        return res.status(400).json({ message: "L'âge, le genre et l'orientation sont requis" });
-    }
-
-    // Vérification des valeurs autorisées pour genre et orientation
-    const genresValides = ["F", "M", "O"];
-    if (!genresValides.includes(genre) || !genresValides.includes(orientation)) {
-        return res.status(400).json({ message: "Valeurs de genre ou orientation invalides" });
-    }
-
-    try {
-        // Mise à jour des champs modifiables
-        await pool.query(
-            "UPDATE utilisateurs SET age = ?, genre = ?, orientation = ? WHERE uuid = ?",
-            [age, genre, orientation, uuid]
-        );
-
-        // Vérifier si l'utilisateur a des tags associés
-        const [userTags] = await pool.query(
-            "SELECT tagId FROM user_tags WHERE userId = (SELECT id FROM utilisateurs WHERE uuid = ?)",
-            [uuid]
-        );
-
-        // Si des tags sont associés, mettre profil_complet à true
-        if (userTags.length > 0) {
-            await pool.query("UPDATE utilisateurs SET profil_complet = TRUE WHERE uuid = ?", [uuid]);
-        }
-
-        res.json({ message: "Profil mis à jour avec succès"});
-    } catch (err) {
-        console.error("❌ Erreur lors de la mise à jour du profil:", err);
-        res.status(500).json({ message: "Erreur interne du serveur" });
-    }
-});
-
-//TAGS 
-router.post('/:userId/tags', verifyToken, async (req, res) => {
-    const { userId } = req.params; // Récupérer l'ID de l'utilisateur
-    const { tags } = req.body; // Récupérer les tags à associer
-
-    if (!tags || !Array.isArray(tags) || tags.length === 0) {
-        return res.status(400).json({ error: 'Vous devez fournir une liste de tags.' });
-    }
-
-    try {
-        // Vérifier si l'utilisateur existe
-        const [userExists] = await pool.query('SELECT id FROM utilisateurs WHERE id = ?', [userId]);
-
-        if (userExists.length === 0) {
-            return res.status(404).json({ error: "Utilisateur non trouvé." });
-        }
-
-        // Vérifier si les tags existent dans la base de données
-        const [tagRows] = await pool.query('SELECT id FROM tags WHERE name IN (?)', [tags]);
-
-        if (tagRows.length === 0) {
-            return res.status(404).json({ error: "Aucun tag trouvé avec ces noms." });
-        }
-
-        // Insérer l'association dans la table `user_tags`
-        const values = tagRows.map(tag => [userId, tag.id]);
-        await pool.query('INSERT INTO user_tags (userId, tagId) VALUES ?', [values]);
-
-        // Vérifier si l'utilisateur a maintenant des tags associés et mettre à jour profil_complet
-        const [userTags] = await pool.query('SELECT tagId FROM user_tags WHERE userId = ?', [userId]);
-
-        // Si des tags sont associés, mettre profil_complet à true
-        if (userTags.length > 0) {
-            await pool.query('UPDATE utilisateurs SET profil_complet = TRUE WHERE id = ?', [userId]);
-        }
-
-        res.status(201).json({ message: 'Tags associés avec succès à l\'utilisateur.' });
-    } catch (error) {
-        console.error('Erreur lors de l\'association des tags :', error.message);
-        console.error('Stack trace:', error.stack);
-        res.status(500).json({ error: 'Erreur serveur', details: error.message });
-    }
-});
-
-
-router.get('/test-matching/:userId', verifyToken, async (req, res) => {
-    const userId = req.params.userId;
-
-    try {
-        // Appeler la fonction getPotentialMatches et obtenir les résultats
-        const matches = await getPotentialMatches(pool, userId);
-        
-        if (matches.length === 0) {
-            return res.status(404).json({ message: 'Aucun match trouvé' });
-        }
-
-        // Retourner les profils correspondants
-        res.status(200).json(matches);
-    } catch (err) {
-        console.error('Erreur lors de la recherche de matchs:', err);
-        res.status(500).json({ message: 'Erreur serveur lors de la recherche de matchs' });
-    }
-});
 
 
 // REDIR QUAND TT CHAMPS FULL

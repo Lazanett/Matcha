@@ -1,7 +1,7 @@
 import express from "express";
 import authRoutes from "./routes/auth.js";
-import pool, { insertUser } from "./database.js"; // Import de insertUser
-import verifyToken from "./middlewares/authMiddleware.js"; // Import des middlewares
+import profileRoutes from "./routes/profile.js";
+import matchRoutes from "./routes/match.js";
 
 const port = process.env.PORT || 5000;
 const app = express();
@@ -21,19 +21,16 @@ checkDatabaseConnection();
 // Pour accepter le JSON dans les requêtes
 app.use(express.json());
 
-
 // Route Home (de base)
 app.get("/", (req, res) => {
     res.json({ message: "Bienvenue sur notre API en Node JS !" });
 });
 
-//  Routes d'authentification
+// OTHER Routes 
 app.use("/auth", authRoutes); 
+app.use('/profile', profileRoutes);
+app.use('/match', matchRoutes);
 
-// Exemple de route protégée
-// app.get("/admin-data", verifyToken, isAdmin, (req, res) => {
-//     res.json({ message: "Bienvenue sur la route admin, vous avez les bons droits !" });
-// });
 
 // Route pour tester la connexion à MySQL
 app.get("/test-db", async (req, res) => {
