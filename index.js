@@ -2,6 +2,7 @@ import express from "express";
 import authRoutes from "./routes/auth.js";
 import profileRoutes from "./routes/profile.js";
 import matchRoutes from "./routes/match.js";
+import pool from "./database.js"
 
 const port = process.env.PORT || 5000;
 const app = express();

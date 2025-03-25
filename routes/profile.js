@@ -11,10 +11,10 @@ const router = express.Router();
 //naf : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiOGI0NWQyMmItODAxZi00MDc1LWJjODgtMWUyNzQ4MmU3NmIwIiwiaWF0IjoxNzQyOTAzNzcyLCJleHAiOjE3NDI5MDczNzJ9.C7h95gx-hd8KJwmdmhrjjr7gRUB_elbqcWKJt7j1DLI
 //shasha : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiYzdhMmMzOTYtODFmOS00ZDA1LTgwN2UtMWQxMjFkOTJjOGViIiwiaWF0IjoxNzQyOTAzOTMyLCJleHAiOjE3NDI5MDc1MzJ9.NhzSE12o3W-Vsnf5c3somugHUzXGlPMbcAzNRK5Oepg
 // test : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiODcyY2E0OTUtYjMwNS00N2VkLWE5YTEtYzhhNDdkY2JiNWU2IiwiaWF0IjoxNzQyOTA0MDgyLCJleHAiOjE3NDI5MDc2ODJ9.u2MzEbQzaRGWxhX8wl4bpW5OBxotY7FQsO85DxkaZbk
-//lara : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiYzMzMjViMmMtNTNhNy00OGNmLTlmYTUtYTk0N2M4YTE2YWY3IiwiaWF0IjoxNzQyOTA0MjE1LCJleHAiOjE3NDI5MDc4MTV9.G4i9q-jdb9Wzj-T-DMnXexN0nfN6ICOYZ0NJ2LIONSo
+//lara : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiYzMzMjViMmMtNTNhNy00OGNmLTlmYTUtYTk0N2M4YTE2YWY3IiwiaWF0IjoxNzQyOTA4NzI0LCJleHAiOjE3NDI5MTIzMjR9.NnBsMKVRYNi75uybPl5rMflLsCzVoLQF2MNRTScgFiY
 
 // UPDATE_PROFILE
-router.post("/update-profile", verifyToken, async (req, res) => {
+router.post("/update", verifyToken, async (req, res) => {
     const { age, genre, orientation } = req.body;
     const uuid = req.user.uuid; // Récupère l'UUID depuis le token
 
@@ -55,7 +55,7 @@ router.post("/update-profile", verifyToken, async (req, res) => {
 });
 
 //TAGS 
-router.post('/:userId/tags', verifyToken, async (req, res) => {
+router.post('/tags/:userId', verifyToken, async (req, res) => {
     const { userId } = req.params; // Récupérer l'ID de l'utilisateur
     const { tags } = req.body; // Récupérer les tags à associer
 

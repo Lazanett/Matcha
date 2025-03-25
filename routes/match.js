@@ -5,7 +5,7 @@ import { getPotentialMatches } from "../matching.js";
 
 const router = express.Router();
 
-router.get('/test-matching/:userId', verifyToken, async (req, res) => {
+router.get('/:userId', verifyToken, async (req, res) => {
     const userId = req.params.userId;
 
     try {
@@ -25,59 +25,3 @@ router.get('/test-matching/:userId', verifyToken, async (req, res) => {
 });
 
 export default router;
-
-
-// const query = `
-//   SELECT u.*
-//   FROM utilisateurs u,
-//        (SELECT id, genre, orientation FROM utilisateurs WHERE id = ?) AS currentUser
-//   WHERE u.id != currentUser.id
-//   AND (
-//     (
-//       currentUser.genre = 'H'
-//       AND currentUser.orientation = 'M'
-//       AND u.genre = 'H'
-//       AND u.orientation IN ('M', 'O')
-//     )
-//     OR
-//     (
-//       currentUser.genre = 'H'
-//       AND currentUser.orientation = 'F'
-//       AND u.genre = 'F'
-//       AND u.orientation IN ('M', 'O')
-
-//     )
-//     OR
-//     (
-//       currentUser.genre = 'H'
-//       AND currentUser.orientation = 'O'
-//       AND (
-//         (u.genre = 'H' AND u.orientation IN ('M', 'O'))
-//         OR (u.genre = 'F' AND u.orientation IN ('M', 'O'))
-//       )
-//     )
-//     OR
-//     (
-//       currentUser.genre = 'F'
-//       AND currentUser.orientation = 'M'
-//       AND u.genre = 'H'
-//       AND u.orientation IN ('F', 'O')
-//     )
-//     OR
-//     (
-//       currentUser.genre = 'F'
-//       AND currentUser.orientation = 'F'
-//       AND u.genre = 'F'
-//       AND u.orientation IN ('F', 'O')
-//     )
-//     OR
-//     (
-//       currentUser.genre = 'F'
-//       AND currentUser.orientation = 'O'
-//       AND (
-//         (u.genre = 'F' AND u.orientation IN ('F', 'O'))
-//         OR (u.genre = 'H' AND u.orientation IN ('F', 'O'))
-//       )
-//     )
-//     )
-// `;
