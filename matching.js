@@ -1,8 +1,6 @@
 import mysql from 'mysql2/promise';
 import pool from "./database.js";
 
-
-
 export async function getPotentialMatches(connection, userId) {
     try {
         // Récupérer les informations de l'utilisateur courant
@@ -109,7 +107,96 @@ export async function getPotentialMatches(connection, userId) {
     }
 }
 
-export default { getPotentialMatches };
+export async function getCommonTags(pool, userId) {
+    console.log(`🔍 Début de getCommonTags pour userId: ${userId}`);
+
+    // 1. Récupérer les tags de l'utilisateur courant
+    const userTagsQuery = 'SELECT tagId FROM user_tags WHERE userId = ?';
+    const [userTagsRows] = await pool.query(userTagsQuery, [userId]);
+    const userTags = userTagsRows.map(row => String(row.tagId));  // Convertir en string (évite problèmes de comparaison)
+
+    console.log(`✅ Tags (ID) de l'utilisateur: ${JSON.stringify(userTags)}`);
+
+    // 2. Récupérer les noms des tags de l'utilisateur
+    let userTagsNames = [];
+    if (userTags.length > 0) {
+        const userTagsNamesQuery = `SELECT name FROM tags WHERE id IN (${userTags.map(() => '?').join(',')})`;
+        const [userTagsNamesRows] = await pool.query(userTagsNamesQuery, userTags);
+        userTagsNames = userTagsNamesRows.map(row => row.name);
+    }
+    console.log(`✅ Tags (Noms) de l'utilisateur: ${userTagsNames.join(', ')}`);
+
+    // 3. Récupérer les matchs potentiels
+    const matches = await getPotentialMatches(pool, userId);
+    if (matches.length === 0) {
+        console.log('⚠️ Aucun match trouvé.');
+        return [];
+    }
+
+    //console.log('🔍 Structure des matchs retournés par getPotentialMatches:', matches);
+    //console.log(`🔍 Nombre de matchs potentiels: ${matches.length}`);
+
+    // 4. Parcourir les matchs pour comparer les tags
+    const results = [];
+
+    for (let match of matches) {
+        //console.log(`\n➡️ Vérification du match:`, match);  // 🔍 Vérification de la structure
+    
+        // Récupérer l'ID correct du match
+        const matchId = match.id;  // Ajusté en fonction du log
+    
+        if (!matchId) {
+            console.log('⚠️ Erreur: Aucun ID trouvé pour ce match, il sera ignoré.');
+            continue;
+        }
+    
+        //console.log(`➡️ Vérification du match ID: ${matchId}`);
+    
+        // Récupérer les tags du match
+        const matchTagsQuery = 'SELECT tagId FROM user_tags WHERE userId = ?';
+        const [matchTagsRows] = await pool.query(matchTagsQuery, [matchId]);
+        const matchTags = matchTagsRows.map(row => String(row.tagId));
+    
+        //console.log(`📌 Tags (ID) du match ${matchId}: ${JSON.stringify(matchTags)}`);
+    
+        // Récupérer les noms des tags du match
+        let matchTagsNames = [];
+        if (matchTags.length > 0) {
+            const matchTagsNamesQuery = `SELECT name FROM tags WHERE id IN (${matchTags.map(() => '?').join(',')})`;
+            const [matchTagsNamesRows] = await pool.query(matchTagsNamesQuery, matchTags);
+            matchTagsNames = matchTagsNamesRows.map(row => row.name);
+        }
+    
+        //console.log(`📌 Tags (Noms) du match ${matchId}: ${matchTagsNames.join(', ')}`);
+    
+        // Calculer le nombre de tags communs
+        const commonTagsCount = matchTags.filter(tag => userTags.includes(tag)).length;
+    
+        console.log(`🔥 Nombre de tags communs avec ${matchId}: ${commonTagsCount}`);
+    
+        // Ajouter aux résultats
+        results.push({
+            ...match,
+            userId: matchId,  // Ajout explicite de l'ID
+            commonTagsCount,
+            matchTagsNames
+        });
+    }
+    
+
+    // 6. Trier les résultats
+    results.sort((a, b) => b.commonTagsCount - a.commonTagsCount);
+
+    console.log('✅ Matchs triés par nombre de tags communs:', results.map(r => ({
+        userId: r.userId,
+        commonTagsCount: r.commonTagsCount
+    })));
+
+    return results;
+}
+
+
+export default { getCommonTags };
 // 1 cas : Homme cherche homme qui est interesser hommes ou  bi
 // 2 cas : Homme cherche Femme qui est interesser hommes ou bi
 // 3 cas : Homme cherche Bi qui cherche Femme bi et Homme bi
