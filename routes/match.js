@@ -5,6 +5,7 @@ import { getCommonTags } from "../matching.js";
 
 const router = express.Router();
 
+// AJOUTER CONDITION SI PROFILE_COMPLET = 1 
 router.get('/:userId', verifyToken, async (req, res) => {
     const userId = req.params.userId;
 

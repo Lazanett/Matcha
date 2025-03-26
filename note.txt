@@ -105,6 +105,21 @@ CREATE TABLE utilisateurs (
     profil_complet BOOLEAN DEFAULT FALSE
 );
 
+
+CREATION USERS RANDOM : 
+INSERT INTO utilisateurs (uuid, email, mot_de_passe, nom, prenom, pseudo, age, genre, orientation, profil_complet)
+VALUES
+    (UUID(), 'user1@example.com', SHA2('Jeanjean@1', 256), 'Dupont', 'Jean', 'jeanD', 25, 'M', 'F', FALSE),
+    (UUID(), 'user2@example.com', SHA2('Sophiesophie@1', 256), 'Martin', 'Sophie', 'sophieM', 30, 'F', 'M', FALSE),
+    (UUID(), 'user3@example.com', SHA2('Lucluc@1', 256), 'Bernard', 'Luc', 'lucB', 28, 'M', 'O', FALSE),
+    (UUID(), 'user4@example.com', SHA2('Emmaemma@1', 256), 'Leroy', 'Emma', 'emmaL', 22, 'F', 'M', FALSE),
+    (UUID(), 'user5@example.com', SHA2('Alexalex@1', 256), 'Moreau', 'Alex', 'alexM', 26, 'O', 'O', FALSE),
+    (UUID(), 'user6@example.com', SHA2('Claraclara@1', 256), 'Simon', 'Clara', 'claraS', 35, 'F', 'F', FALSE),
+    (UUID(), 'user7@example.com', SHA2('Nathannathan@1', 256), 'Roux', 'Nathan', 'nathanR', 29, 'M', 'M', FALSE),
+    (UUID(), 'user8@example.com', SHA2('Elodieelodie@1', 256), 'Fournier', 'Elodie', 'elodieF', 27, 'F', 'O', FALSE),
+    (UUID(), 'user9@example.com', SHA2('Thomastomas@1', 256), 'Girard', 'Thomas', 'thomasG', 31, 'M', 'F', FALSE),
+    (UUID(), 'user10@example.com', SHA2('Camillecamille@1', 256), 'David', 'Camille', 'camilleD', 24, 'O', 'M', FALSE);
+
 {
   "nom": "test",
   "prenom": "test",
@@ -197,6 +212,59 @@ INSERT INTO tags (id, name) VALUES
                                     |
                                 ID utilisateur
           (renvoie 'netflix')
+
+
+7 ===> association de tags 
+INSERT INTO user_tags (userId, tagId) VALUES
+-- Utilisateur 1
+(1, (SELECT id FROM tags WHERE name = 'Netflix')),
+(1, (SELECT id FROM tags WHERE name = 'Geek')),
+(1, (SELECT id FROM tags WHERE name = 'Sport')),
+
+-- Utilisateur 2
+(2, (SELECT id FROM tags WHERE name = 'Lecture')),
+(2, (SELECT id FROM tags WHERE name = 'Vegan')),
+(2, (SELECT id FROM tags WHERE name = 'Tatouage')),
+
+-- Utilisateur 3
+(3, (SELECT id FROM tags WHERE name = 'Tatouage')),
+(3, (SELECT id FROM tags WHERE name = 'Piercing')),
+(3, (SELECT id FROM tags WHERE name = 'Netflix')),
+
+-- Utilisateur 4
+(4, (SELECT id FROM tags WHERE name = 'Sport')),
+(4, (SELECT id FROM tags WHERE name = 'Geek')),
+(4, (SELECT id FROM tags WHERE name = 'Vegan')),
+
+-- Utilisateur 5
+(5, (SELECT id FROM tags WHERE name = 'Netflix')),
+(5, (SELECT id FROM tags WHERE name = 'Sport')),
+(5, (SELECT id FROM tags WHERE name = 'Piercing')),
+
+-- Utilisateur 6
+(6, (SELECT id FROM tags WHERE name = 'Tatouage')),
+(6, (SELECT id FROM tags WHERE name = 'Lecture')),
+(6, (SELECT id FROM tags WHERE name = 'Geek')),
+
+-- Utilisateur 7
+(7, (SELECT id FROM tags WHERE name = 'Lecture')),
+(7, (SELECT id FROM tags WHERE name = 'Sport')),
+(7, (SELECT id FROM tags WHERE name = 'Vegan')),
+
+-- Utilisateur 8
+(8, (SELECT id FROM tags WHERE name = 'Geek')),
+(8, (SELECT id FROM tags WHERE name = 'Vegan')),
+(8, (SELECT id FROM tags WHERE name = 'Netflix')),
+
+-- Utilisateur 9
+(9, (SELECT id FROM tags WHERE name = 'Piercing')),
+(9, (SELECT id FROM tags WHERE name = 'Tatouage')),
+(9, (SELECT id FROM tags WHERE name = 'Lecture')),
+
+-- Utilisateur 10
+(10, (SELECT id FROM tags WHERE name = 'Sport')),
+(10, (SELECT id FROM tags WHERE name = 'Netflix')),
+(10, (SELECT id FROM tags WHERE name = 'Tatouage'));
 
 ====================================================================================
 J'en suis a l'etape ou je dois faire l'algo de matching entre les 
