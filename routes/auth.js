@@ -121,6 +121,12 @@ router.post("/login", async (req, res) => {
             { expiresIn: "1h" }  // Le token expire dans 1 heure
         );
 
+        // Ajouter l'enregistrement de la connexion dans user_sessions
+        await pool.query(
+            'INSERT INTO user_sessions (userId) VALUES (?)',
+            [user.id]
+        );
+
         res.json({ message: "Connexion réussie", token });
     } catch (err) {
         console.error("❌ Erreur lors de la connexion:", err);
@@ -128,40 +134,38 @@ router.post("/login", async (req, res) => {
     }
 });
 
-
-
 // REDIR QUAND TT CHAMPS FULL
-router.get("/dashboard", verifyToken, async (req, res) => {
-    const uuid = req.user.uuid;
+// router.get("/dashboard", verifyToken, async (req, res) => {
+//     const uuid = req.user.uuid;
 
-    try {
-        // Vérifier si le profil est complet
-        const [rows] = await pool.query(
-            "SELECT profil_complet FROM utilisateurs WHERE uuid = ?",
-            [uuid]
-        );
+//     try {
+//         // Vérifier si le profil est complet
+//         const [rows] = await pool.query(
+//             "SELECT profil_complet FROM utilisateurs WHERE uuid = ?",
+//             [uuid]
+//         );
 
-        const user = rows[0];
-        if (!user.profil_complet) {
-            return res.status(403).json({ message: "Veuillez remplir votre profil avant d'accéder à cette page" });
-        }
+//         const user = rows[0];
+//         if (!user.profil_complet) {
+//             return res.status(403).json({ message: "Veuillez remplir votre profil avant d'accéder à cette page" });
+//         }
 
-        // Si le profil est complet, l'utilisateur peut accéder à cette route
-        res.json({ message: "Bienvenue sur le dashboard !" });
+//         // Si le profil est complet, l'utilisateur peut accéder à cette route
+//         res.json({ message: "Bienvenue sur le dashboard !" });
 
-    } catch (err) {
-        console.error("❌ Erreur lors de l'accès au dashboard:", err);
-        res.status(500).json({ message: "Erreur interne du serveur" });
-    }
-});
+//     } catch (err) {
+//         console.error("❌ Erreur lors de l'accès au dashboard:", err);
+//         res.status(500).json({ message: "Erreur interne du serveur" });
+//     }
+// });
 
 
-// Route protégée, nécessite un token JWT valide TEST SI UUID EST VALID
-router.get("/protected", verifyToken, (req, res) => {
-    // Une fois que le middleware `verifyToken` a vérifié le token, tu peux accéder à l'UUID
-    res.json({
-        message: `Bienvenue utilisateur avec UUID: ${req.user.uuid}`,
-    });
-});
+// // Route protégée, nécessite un token JWT valide TEST SI UUID EST VALID
+// router.get("/protected", verifyToken, (req, res) => {
+//     // Une fois que le middleware `verifyToken` a vérifié le token, tu peux accéder à l'UUID
+//     res.json({
+//         message: `Bienvenue utilisateur avec UUID: ${req.user.uuid}`,
+//     });
+// });
 
 export default router;

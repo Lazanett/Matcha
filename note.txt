@@ -273,12 +273,49 @@ baser sur 3 criteres :
 ◦ La même zone géographique que l'utilisateur.
 ◦ Un maximum de tags communs.
 ◦ Un maximum d'indices de notoriété. 
-Je vais m'attaquer a contabiliser les tags commun entre les profils 
-de la bases de donnee etre profils "demandeur de match".  
-dans ma tables user_tags c'est la que j'associe l'id des utilisateur 
-et les id des tags. 
-dans un premier temps j'aimerai creer un nouveau fichier ou il y a 
-un fonction pour determiner qui est le "profil demandeur de match", 
-le genre de personne qui recherche qui est contenu dans le champ 
-orientation dans utlilisateur.
-puis une fonction qui cherche dans la base de donnee user_tags le nombre de tags en commun avec 
+======================================================================
+                      FAMERATTING
+
+Criteres : 
+===> nombre de vue du profil
+===> nombre likes
+===> frequence de connexion
+===> nombre blocage du profil
+
+View =
+CREATE TABLE profile_views (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userId INT NOT NULL,  -- Utilisateur qui est vu
+    viewerId INT NOT NULL, -- Utilisateur qui a vu le profil
+    viewDate DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Date de la vue
+    FOREIGN KEY (userId) REFERENCES utilisateurs(id),
+    FOREIGN KEY (viewerId) REFERENCES utilisateurs(id)
+);
+
+likes =
+CREATE TABLE likes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userId INT NOT NULL,  -- Utilisateur qui a reçu le like
+    likerId INT NOT NULL, -- Utilisateur qui a aimé
+    likeDate DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Date du like
+    FOREIGN KEY (userId) REFERENCES utilisateurs(id),
+    FOREIGN KEY (likerId) REFERENCES utilisateurs(id)
+);
+
+connexion =
+CREATE TABLE user_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userId INT NOT NULL,  -- Utilisateur qui s'est connecté
+    sessionDate DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Date de la session
+    FOREIGN KEY (userId) REFERENCES utilisateurs(id)
+);
+
+block = 
+CREATE TABLE user_blocks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    blockedUserId INT NOT NULL,  -- Utilisateur bloqué
+    blockerUserId INT NOT NULL,  -- Utilisateur qui a bloqué
+    blockDate DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Date du blocage
+    FOREIGN KEY (blockedUserId) REFERENCES utilisateurs(id),
+    FOREIGN KEY (blockerUserId) REFERENCES utilisateurs(id)
+);

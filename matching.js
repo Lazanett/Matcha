@@ -1,7 +1,4 @@
-import mysql from 'mysql2/promise';
-import pool from "./database.js";
-
-export async function getPotentialMatches(connection, userId) {
+async function getPotentialMatches(connection, userId) {
     try {
         // Récupérer les informations de l'utilisateur courant
         const [userRows] = await connection.execute(
@@ -191,14 +188,69 @@ export async function getCommonTags(pool, userId) {
     }
 }
 
+export async function getFameRatting(pool, userId) {
 
-export default { getCommonTags };
-// 1 cas : Homme cherche homme qui est interesser hommes ou  bi
-// 2 cas : Homme cherche Femme qui est interesser hommes ou bi
-// 3 cas : Homme cherche Bi qui cherche Femme bi et Homme bi
+    try {
 
-// 4 cas : Femme cherche Homme qui est interesser Femme ou bi
-// 5 cas : Femme cherche Femme qui est interesser femmes et bi
-// 6 cas : femme cherche bi qui est interesser femme bi et homme bi
+        // Récupérer les critères
+        const [viewsResult] = await pool.query(
+            'SELECT COUNT(*) AS views FROM profile_views WHERE userId = ?',
+            [userId]
+        );
+    
+        const [likesResult] = await pool.query(
+            'SELECT COUNT(*) AS likes FROM likes WHERE userId = ?',
+            [userId]
+        );
+        const [blocksResult] = await pool.query(
+            'SELECT COUNT(*) AS blocks FROM user_blocks WHERE blockedUserId = ?',
+            [userId]);
+        const connections = await getUserConnections(pool, userId);
 
-// 7 cas : Autre cherche Homme qui est interesser homme ou bi
+        const views = viewsResult[0].views || 0;
+        const likes = likesResult[0].likes || 0;
+        const blocks = blocksResult[0].blocks || 0;
+
+        // DEBUG Log des valeurs récupérées
+        console.log(`Utilisateur ${userId}:`);
+        console.log(`Vues: ${views}`);
+        console.log(`Likes: ${likes}`);
+        console.log(`Bloquages: ${blocks}`);
+        console.log(`Connexions: ${connections}`);
+
+        // Calcul du score de fréquence de connexion (normalisation)
+        const maxConnections = 14; // Hypothèse : 2 connexions/jour en moyenne sur 7 jours
+        const connectionScore = Math.min(connections / maxConnections, 1) * 30; // Score max = 30
+
+        console.log(`Score de connexion (normalisé): ${connectionScore}`);
+        let fameRating = (views * 0.2) + (likes * 0.25) + (connections * 0.3) - (blocks * 0.25);
+        console.log(`Fame Rating brut: ${fameRating}`);
+        let normalizedFameRating = (fameRating / 100) * 5;
+        console.log(`Fame Rating normalisé avant limitation: ${normalizedFameRating}`);
+        normalizedFameRating = Math.min(normalizedFameRating, 5);
+        console.log(`Fame Rating (limité à 5): ${normalizedFameRating}`);
+        normalizedFameRating = parseFloat(normalizedFameRating.toFixed(1));
+        console.log(`Fame Rating FINAL: ${normalizedFameRating}`);
+        return normalizedFameRating;
+
+    } catch (error) {
+        console.error('Erreur lors de la récupération des matchs:', error);
+        return 0;
+    }
+}
+
+async function getUserConnections(pool, userId) {
+    try {
+        const [connectionsResult] = await pool.query(
+            'SELECT COUNT(*) AS connections FROM user_sessions WHERE userId = ? AND sessionDate > NOW() - INTERVAL 1 WEEK',
+            [userId]
+        );
+
+        return connectionsResult[0].connections;
+    } catch (error) {
+        console.error("Erreur lors de la récupération des connexions:", error);
+        return 0; // Valeur par défaut si erreur
+    }
+}
+
+export default { getCommonTags, getFameRatting };
