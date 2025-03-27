@@ -20,10 +20,24 @@ router.get('/:userId', verifyToken, async (req, res) => {
         // Récupérer le FameRating de chaque utilisateur dans le tableau des matchs
         for (let match of matches) {
             match.fameRating = await getFameRatting(pool, match.id); 
+        
         }
+      
+        // tri FameRating/tags à 50/50
+        matches.sort((a, b) => {
+            // Calculer une combinaison des deux critères (commonTagsCount et fameRating) à 50/50
+            const scoreA = (a.commonTagsCount * 0.5) + (a.fameRating * 0.5);
+            const scoreB = (b.commonTagsCount * 0.5) + (b.fameRating * 0.5);
 
-        // Trier les matchs par FameRating (du plus élevé au plus bas)
-        matches.sort((a, b) => b.fameRating - a.fameRating);
+            console.log(`scoreA: ${scoreA}, scoreB: ${scoreB}`);
+            // Si scoreA est supérieur à scoreB, alors a vient avant b
+            if (scoreA < scoreB) return 1;
+            if (scoreA > scoreB) return -1;
+
+            // Si les scores sont égaux, on ne change rien
+            return 0;
+        });
+       
 
         // Retourner les matchs triés avec les tags communs et le FameRating
         res.status(200).json(matches);
