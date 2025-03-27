@@ -132,9 +132,17 @@ VALUES
   "nom": "test",
   "prenom": "test",
   "pseudo": "test23",
-  "age": 25,
-  "genre": "M",
-  "orientation": "F"
+  "email": "@gmail.com",
+  "mot_de_passe": ""
+}
+
+
+{
+  "age": "38",
+  "genre": "O",
+  "orientation": "M",
+  "tags": ["Geek", "Lecture"],
+  "location": "Bordeaux"
 }
 
 ==========================================================================

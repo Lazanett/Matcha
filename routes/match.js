@@ -1,7 +1,7 @@
 import express from "express";
 import verifyToken from "../middlewares/authMiddleware.js";
 import pool from "../database.js";
-import { getCommonTags, getFameRatting } from "../matching.js";
+import { getCommonTags, getFameRatting, calculateDistance } from "../matching.js";
 
 const router = express.Router();
 
@@ -17,19 +17,53 @@ router.get('/:userId', verifyToken, async (req, res) => {
             return res.status(404).json({ message: 'Aucun match trouvé' });
         }
 
+        // Récupérer les coordonnées (lat, lon) de l'utilisateur actuel
+        const [userCoordinatesResult] = await pool.query(
+            "SELECT lat, lon FROM utilisateurs WHERE id = ?",
+            [userId]
+        );
+
+        if (userCoordinatesResult.length === 0) {
+            return res.status(404).json({ error: "Utilisateur non trouvé." });
+        }
+
+        const userLat = userCoordinatesResult[0].lat;
+        const userLon = userCoordinatesResult[0].lon;
+
         // Récupérer le FameRating de chaque utilisateur dans le tableau des matchs
         for (let match of matches) {
+
+            // Récupérer les coordonnées du match
+            const [matchCoordinatesResult] = await pool.query(
+                "SELECT lat, lon FROM utilisateurs WHERE id = ?",
+                [match.id]
+            );
+
+            if (matchCoordinatesResult.length > 0) {
+                const matchLat = matchCoordinatesResult[0].lat;
+                const matchLon = matchCoordinatesResult[0].lon;
+                
+                console.log(`matchLat: ${matchLat}, matchLon: ${matchLon} `);
+                // Calculer la distance entre l'utilisateur et le match
+                const distance = calculateDistance(userLat, userLon, matchLat, matchLon);
+                console.log(`distance: ${distance}`);
+                match.distance = distance; // Ajouter la distance dans le match
+                console.log(`match.distance: ${match.distance}`);
+            }
+
             match.fameRating = await getFameRatting(pool, match.id); 
         
         }
       
         // tri FameRating/tags à 50/50
+        // Tri par FameRating, distance et tags à égalité
         matches.sort((a, b) => {
-            // Calculer une combinaison des deux critères (commonTagsCount et fameRating) à 50/50
-            const scoreA = (a.commonTagsCount * 0.5) + (a.fameRating * 0.5);
-            const scoreB = (b.commonTagsCount * 0.5) + (b.fameRating * 0.5);
-
-            console.log(`scoreA: ${scoreA}, scoreB: ${scoreB}`);
+            // Calculer une combinaison des trois critères (commonTagsCount, fameRating, distance)
+            // Inverser la distance (plus la distance est petite, plus elle a un score élevé)
+            const scoreA = (a.commonTagsCount * 0.5) + (a.fameRating * 0.5) + ((a.distance > 0 ? (1 / a.distance) : 0) * 0.5);
+            const scoreB = (b.commonTagsCount * 0.5) + (b.fameRating * 0.5) + ((b.distance > 0 ? (1 / b.distance) : 0) * 0.5);
+            
+            //console.log(`scoreA: ${scoreA}, scoreB: ${scoreB}`);
             // Si scoreA est supérieur à scoreB, alors a vient avant b
             if (scoreA < scoreB) return 1;
             if (scoreA > scoreB) return -1;
@@ -38,7 +72,9 @@ router.get('/:userId', verifyToken, async (req, res) => {
             return 0;
         });
        
-
+        matches.forEach(match => {
+            console.log(`ID: ${match.id}, Score: ${(match.commonTagsCount * 0.5) + (match.fameRating * 0.5) + ((match.distance > 0 ? (1 / match.distance) : 0) * 0.5)}`);
+        });
         // Retourner les matchs triés avec les tags communs et le FameRating
         res.status(200).json(matches);
     } catch (err) {
