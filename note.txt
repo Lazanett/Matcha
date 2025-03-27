@@ -105,6 +105,14 @@ CREATE TABLE utilisateurs (
     profil_complet BOOLEAN DEFAULT FALSE
 );
 
+==== LOCALISATION
+ALTER TABLE utilisateurs
+ADD COLUMN localisation VARCHAR(255) DEFAULT NULL;
+
+ALTER TABLE utilisateurs
+ADD COLUMN lat DOUBLE DEFAULT NULL,
+ADD COLUMN lon DOUBLE DEFAULT NULL;
+
 
 CREATION USERS RANDOM : 
 INSERT INTO utilisateurs (uuid, email, mot_de_passe, nom, prenom, pseudo, age, genre, orientation, profil_complet)
@@ -377,3 +385,11 @@ VALUES
 (8, 2, NOW() - INTERVAL 5 DAY), 
 (9, 3, NOW() - INTERVAL 2 WEEK), 
 (10, 4, NOW());
+
+=============================================================================
+                      API LOCALISATION
+                     (OpenCage Geocoder)
+larazanetti@outlook.fr
+Ericlara04?
+
+dependance : npm install axios

@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 async function getPotentialMatches(connection, userId) {
     try {
         // Récupérer les informations de l'utilisateur courant
@@ -267,4 +269,26 @@ async function getUserConnections(pool, userId) {
     }
 }
 
-export default { getCommonTags, getFameRatting };
+// Fonction pour obtenir les coordonnées GPS depuis la ville
+export async function getCoordinates(city) {
+    const apiKey = '82216e3ae11d446b8d5b0905995e3ede';  // Remplace par ta clé API
+    const url = `https://api.opencagedata.com/geocode/v1/json?q=${city}&key=${apiKey}`;
+
+    try {
+        const response = await axios.get(url);
+        const data = response.data;
+
+        if (data.results.length > 0) {
+            const lat = data.results[0].geometry.lat;
+            const lon = data.results[0].geometry.lng;
+            return { lat, lon };
+        } else {
+            throw new Error('Aucune donnée trouvée pour cette ville');
+        }
+    } catch (error) {
+        console.error('Erreur lors de l\'appel à l\'API OpenCage:', error);
+        throw error;
+    }
+}
+
+export default { getCommonTags, getFameRatting, getCoordinates };
