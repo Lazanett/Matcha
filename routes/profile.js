@@ -4,13 +4,9 @@ import pool from "../database.js";
 
 const router = express.Router();
 
-//lara : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiNzhkZTI3ODktNjk0YS00NTlkLWI1YjUtY2NjZWZlOTI1NTA2IiwiaWF0IjoxNzQyOTg3NDYwLCJleHAiOjE3NDI5OTEwNjB9.6Afwyg7rhvSNoS13lg68FzSQr3dougM8T0E2mWReQt4
-// test : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiMzNiZWI0NmEtMTZlOC00NzMzLWFjNjMtNTUxZThmYmZmNmY1IiwiaWF0IjoxNzQzMDA1OTY0LCJleHAiOjE3NDMwMDk1NjR9.i6SxH8yUIyJbFtitcuZd0rkCSM1ApW_Nt-xvakQwoRE
-
-// AJOUTER (genre, orientation, biographie, tags. 5 photos)
-// update fonction 
-
-
+// lara : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiZWVhMTg0OWMtMTM4My00NDZhLWFlNmMtZmEwMjUyMTdjZTZlIiwiaWF0IjoxNzQzMDc0MjI4LCJleHAiOjE3NDMwNzc4Mjh9.2GZqqRl_BKSfkrXPDbJQ0H_4J6Oe9LWaONw06ahlIHU
+// AJOUTER (genre, orientation, biographie, tags. 5 photos)// update fonction 
+// addparams
 router.post("/addparams", verifyToken, async (req, res) => {
     const { age, genre, orientation, tags } = req.body;
     const uuid = req.user.uuid; // Récupère l'UUID depuis le token

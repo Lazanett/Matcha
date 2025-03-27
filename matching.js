@@ -189,22 +189,23 @@ export async function getCommonTags(pool, userId) {
 }
 
 export async function getFameRatting(pool, userId) {
-
     try {
-
-        // Récupérer les critères
+        // Récupération des critères
         const [viewsResult] = await pool.query(
             'SELECT COUNT(*) AS views FROM profile_views WHERE userId = ?',
             [userId]
         );
-    
+
         const [likesResult] = await pool.query(
             'SELECT COUNT(*) AS likes FROM likes WHERE userId = ?',
             [userId]
         );
+
         const [blocksResult] = await pool.query(
             'SELECT COUNT(*) AS blocks FROM user_blocks WHERE blockedUserId = ?',
-            [userId]);
+            [userId]
+        );
+
         const connections = await getUserConnections(pool, userId);
 
         const views = viewsResult[0].views || 0;
@@ -218,23 +219,36 @@ export async function getFameRatting(pool, userId) {
         console.log(`Bloquages: ${blocks}`);
         console.log(`Connexions: ${connections}`);
 
-        // Calcul du score de fréquence de connexion (normalisation)
-        const maxConnections = 14; // Hypothèse : 2 connexions/jour en moyenne sur 7 jours
-        const connectionScore = Math.min(connections / maxConnections, 1) * 30; // Score max = 30
+        // Augmenter l'influence des connexions (car elles sont rares)
+        const maxConnections = 10; // Réduction du max pour donner plus de poids
+        const connectionScore = Math.min(connections / maxConnections, 1) * 40; // Score max = 40
 
         console.log(`Score de connexion (normalisé): ${connectionScore}`);
-        let fameRating = (views * 0.2) + (likes * 0.25) + (connections * 0.3) - (blocks * 0.25);
+
+        // Ajustement des coefficients pour booster les scores
+        let fameRating = (views * 0.4) + (likes * 0.5) + (connections * 0.4) - (blocks * 0.25);
+
         console.log(`Fame Rating brut: ${fameRating}`);
-        let normalizedFameRating = (fameRating / 100) * 5;
+
+        // Changer la normalisation pour éviter des scores trop bas
+        let normalizedFameRating = (fameRating / 20) * 5; // Réduction du diviseur pour booster la note
         console.log(`Fame Rating normalisé avant limitation: ${normalizedFameRating}`);
+
+        // Appliquer une note de base minimale
+        normalizedFameRating = Math.max(normalizedFameRating, 0.5);
+
+        // Limitation max à 5
         normalizedFameRating = Math.min(normalizedFameRating, 5);
         console.log(`Fame Rating (limité à 5): ${normalizedFameRating}`);
+
+        // Arrondir à 1 chiffre après la virgule
         normalizedFameRating = parseFloat(normalizedFameRating.toFixed(1));
         console.log(`Fame Rating FINAL: ${normalizedFameRating}`);
+
         return normalizedFameRating;
 
     } catch (error) {
-        console.error('Erreur lors de la récupération des matchs:', error);
+        console.error('Erreur lors de la récupération du Fame Rating:', error);
         return 0;
     }
 }
