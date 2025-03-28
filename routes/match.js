@@ -1,7 +1,8 @@
 import express from "express";
 import verifyToken from "../middlewares/authMiddleware.js";
 import pool from "../database.js";
-import { getCommonTags, getFameRatting, calculateDistance } from "../matching.js";
+import { getPotentialMatches, getCommonTags, getFameRatting, calculateDistance } from "../matching.js";
+import { applyAgeFilter } from "../filter.js";
 
 const router = express.Router();
 
@@ -10,14 +11,47 @@ router.get('/:userId', verifyToken, async (req, res) => {
     const userId = req.params.userId;
 
     try {
-        // Récupérer les matchs triés par orientation sexuelle et tags communs
-        let matches = await getCommonTags(pool, userId);
+        // 1. Appeler `getPotentialMatches` directement pour récupérer les matchs potentiels
+        let matches = await getPotentialMatches(pool, userId);
 
         if (matches.length === 0) {
             return res.status(404).json({ message: 'Aucun match trouvé' });
         }
 
-        // Récupérer les coordonnées (lat, lon) de l'utilisateur actuel
+        matches.forEach(match => {
+            console.log(`AVANT FILTRE : ID: ${match.id}`);
+        });
+        
+        // 2. Vérifier si un filtre d'âge est fourni
+        const ageDiff = req.query.ageDiff;  // Récupérer le paramètre ageDiff de la requête
+
+        // 3. Si un filtre d'âge est sélectionné, appliquer le filtrage
+        if (ageDiff) {
+            const { matches: filteredMatches, message } = await applyAgeFilter(pool, userId, ageDiff, matches);
+            
+            if (message) {
+                return res.status(404).json({ message });  // Renvoyer le message d'erreur si aucun match n'a été trouvé
+            }
+
+            // Si des matchs sont trouvés après le filtrage, renvoyer les résultats
+            matches = filteredMatches;
+            if (matches.length === 0) {
+                return res.status(404).json({ message: 'Aucun match dans cette tranche d\'âge' });
+            }
+            matches.forEach(match => {
+                console.log(`ID: ${match.id}`);
+            });
+            return res.status(200).json(matches);
+        }
+        // 2. Appeler `getCommonTags` pour filtrer les matchs par tags communs
+        matches = await getCommonTags(pool, userId, matches);
+
+        // Vérifier si nous avons des matchs après le filtrage des tags
+        if (matches.length === 0) {
+            return res.status(404).json({ message: 'Aucun match trouvé avec les tags communs' });
+        }
+
+        // 3. Récupérer les coordonnées (lat, lon) de l'utilisateur actuel
         const [userCoordinatesResult] = await pool.query(
             "SELECT lat, lon FROM utilisateurs WHERE id = ?",
             [userId]
@@ -30,8 +64,8 @@ router.get('/:userId', verifyToken, async (req, res) => {
         const userLat = userCoordinatesResult[0].lat;
         const userLon = userCoordinatesResult[0].lon;
 
+        // 4. Calculer la distance pour chaque match et ajouter la notoriété
         for (let match of matches) {
-
             const [matchCoordinatesResult] = await pool.query(
                 "SELECT lat, lon FROM utilisateurs WHERE id = ?",
                 [match.id]
@@ -44,29 +78,35 @@ router.get('/:userId', verifyToken, async (req, res) => {
                 const distance = calculateDistance(userLat, userLon, matchLat, matchLon);
                 match.distance = distance; // Ajouter la distance dans le match
             }
-            match.fameRating = await getFameRatting(pool, match.id); 
+
+            // Ajouter la fameRating (notoriété) pour chaque match
+            match.fameRating = await getFameRatting(pool, match.id);
         }
-      
-        // distance + elever
-        matches.sort((a, b) => {
-            const scoreA = (a.commonTagsCount * 0.3) + (a.fameRating * 0.3) + ((a.distance > 0 ? (1 / a.distance) : 0) * 0.6);
-            const scoreB = (b.commonTagsCount * 0.3) + (b.fameRating * 0.3) + ((b.distance > 0 ? (1 / b.distance) : 0) * 0.6);
-        
-            if (scoreA < scoreB) return 1;
-            if (scoreA > scoreB) return -1;
-            return 0;
-        });
-       
+
+        // 5. Trier les résultats en fonction de la distance, de la notoriété et des tags communs
+        if (matches.length > 1) {
+            matches.sort((a, b) => {
+                const scoreA = ((a.commonTagsCount || 0) * 0.3) + (a.fameRating * 0.3) + ((a.distance > 0 ? (1 / a.distance) : 0) * 0.6);
+                const scoreB = ((b.commonTagsCount || 0) * 0.3) + (b.fameRating * 0.3) + ((b.distance > 0 ? (1 / b.distance) : 0) * 0.6);
+                
+                if (scoreA < scoreB) return 1;
+                if (scoreA > scoreB) return -1;
+                return 0;
+            });
+        }
+
+        // Affichage pour débogage
         matches.forEach(match => {
-            console.log(`ID: ${match.id}, Score: ${(match.commonTagsCount * 0.5) + (match.fameRating * 0.5) + ((match.distance > 0 ? (1 / match.distance) : 0) * 0.5)}`);
+            console.log(`ID: ${match.id}, Score: ${((match.commonTagsCount || 0) * 0.3) + (match.fameRating * 0.3) + ((match.distance > 0 ? (1 / match.distance) : 0) * 0.6)}`);
         });
+
+        // 6. Retourner la réponse avec les matchs
         res.status(200).json(matches);
     } catch (err) {
         console.error('❌ Erreur lors de la recherche de matchs:', err);
         res.status(500).json({ message: 'Erreur serveur lors de la recherche de matchs' });
     }
 });
-
 
 // FAME RATTING
 router.post('/views', async (req, res) => {

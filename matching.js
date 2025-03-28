@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-async function getPotentialMatches(connection, userId) {
+export async function getPotentialMatches(connection, userId) {
     try {
         // Récupérer les informations de l'utilisateur courant
         const [userRows] = await connection.execute(
@@ -106,8 +106,7 @@ async function getPotentialMatches(connection, userId) {
     }
 }
 
-export async function getCommonTags(pool, userId) {
-    
+export async function getCommonTags(pool, userId, matches) {
     try {
         console.log(`🔍 Début de getCommonTags pour userId: ${userId}`);
 
@@ -118,64 +117,41 @@ export async function getCommonTags(pool, userId) {
 
         console.log(`✅ Tags (ID) de l'utilisateur: ${JSON.stringify(userTags)}`);
 
-        // 2. Récupérer les noms des tags de l'utilisateur
-        let userTagsNames = [];
-        if (userTags.length > 0) {
-            const userTagsNamesQuery = `SELECT name FROM tags WHERE id IN (${userTags.map(() => '?').join(',')})`;
-            const [userTagsNamesRows] = await pool.query(userTagsNamesQuery, userTags);
-            userTagsNames = userTagsNamesRows.map(row => row.name);
-        }
-        console.log(`✅ Tags (Noms) de l'utilisateur: ${userTagsNames.join(', ')}`);
-
-        // 3. Récupérer les matchs potentiels
-        const matches = await getPotentialMatches(pool, userId);
-        if (matches.length === 0) {
-            console.log('⚠️ Aucun match trouvé.');
-            return [];
-        }
-
-        // 4. Parcourir les matchs pour comparer les tags
+        // 2. Parcourir les matchs pour comparer les tags
         const results = [];
 
         for (let match of matches) {
-            //console.log(`\n➡️ Vérification du match:`, match);  // 🔍 Vérification de la structure
-        
-            // Récupérer l'ID correct du match
             const matchId = match.id;  // Ajusté en fonction du log
-        
+
             if (!matchId) {
                 console.log('⚠️ Erreur: Aucun ID trouvé pour ce match, il sera ignoré.');
                 continue;
             }
-        
+
             // Récupérer les tags du match
             const matchTagsQuery = 'SELECT tagId FROM user_tags WHERE userId = ?';
             const [matchTagsRows] = await pool.query(matchTagsQuery, [matchId]);
             const matchTags = matchTagsRows.map(row => String(row.tagId));
-        
-            // Récupérer les noms des tags du match
-            let matchTagsNames = [];
-            if (matchTags.length > 0) {
-                const matchTagsNamesQuery = `SELECT name FROM tags WHERE id IN (${matchTags.map(() => '?').join(',')})`;
-                const [matchTagsNamesRows] = await pool.query(matchTagsNamesQuery, matchTags);
-                matchTagsNames = matchTagsNamesRows.map(row => row.name);
-            }
-        
+
             // Calculer le nombre de tags communs
             const commonTagsCount = matchTags.filter(tag => userTags.includes(tag)).length;
-        
+
             console.log(`🔥 Nombre de tags communs avec ${matchId}: ${commonTagsCount}`);
-        
-            // Ajouter aux résultats
+
+           // Inclure même les matchs sans tags communs
             results.push({
                 ...match,
-                userId: matchId,  // Ajout explicite de l'ID
-                commonTagsCount,
-                matchTagsNames
+                commonTagsCount
             });
         }
-        
-        // 6. Trier les résultats
+
+        // 3. Si aucun tag commun n'a été trouvé, ne pas changer l'ordre des matchs
+        if (results.length === 0) {
+            console.log("⚠️ Aucun tag commun trouvé. Renvoi des matchs sans changement d'ordre.");
+            return matches; // Retourner les matchs sans les trier si aucun tag commun
+        }
+
+        // 4. Trier les résultats par nombre de tags communs
         results.sort((a, b) => b.commonTagsCount - a.commonTagsCount);
 
         console.log('✅ Matchs triés par nombre de tags communs:', results.map(r => ({
@@ -186,9 +162,10 @@ export async function getCommonTags(pool, userId) {
         return results;
     } catch (error) {
         console.error('Erreur lors de la récupération des matchs:', error);
-        return [];
+        return matches;  // Retourner les matchs sans les modifier en cas d'erreur
     }
 }
+
 
 export async function getFameRatting(pool, userId) {
     try {
@@ -304,4 +281,4 @@ export async function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 
-export default { getCommonTags, getFameRatting, getCoordinates, calculateDistance };
+export default { getPotentialMatches, getCommonTags, getFameRatting, getCoordinates, calculateDistance };
