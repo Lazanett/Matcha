@@ -102,6 +102,9 @@ CREATE TABLE utilisateurs (
     age INT CHECK (age >= 18),
     genre ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O',
     orientation ENUM('F', 'M', 'O') NOT NULL DEFAULT 'O',
+    localisation VARCHAR(255) DEFAULT NULL,
+    lat DOUBLE DEFAULT NULL,
+    lon DOUBLE DEFAULT NULL,
     profil_complet BOOLEAN DEFAULT FALSE
 );
 
@@ -125,8 +128,7 @@ VALUES
     (UUID(), 'user6@example.com', SHA2('Claraclara@1', 256), 'Simon', 'Clara', 'claraS', 35, 'F', 'F', FALSE),
     (UUID(), 'user7@example.com', SHA2('Nathannathan@1', 256), 'Roux', 'Nathan', 'nathanR', 29, 'M', 'M', FALSE),
     (UUID(), 'user8@example.com', SHA2('Elodieelodie@1', 256), 'Fournier', 'Elodie', 'elodieF', 27, 'F', 'O', FALSE),
-    (UUID(), 'user9@example.com', SHA2('Thomastomas@1', 256), 'Girard', 'Thomas', 'thomasG', 31, 'M', 'F', FALSE),
-    (UUID(), 'user10@example.com', SHA2('Camillecamille@1', 256), 'David', 'Camille', 'camilleD', 24, 'O', 'M', FALSE);
+    (UUID(), 'user9@example.com', SHA2('Thomastomas@1', 256), 'Girard', 'Thomas', 'thomasG', 31, 'M', 'F', FALSE);
 
 {
   "nom": "test",
@@ -310,17 +312,32 @@ CREATE TABLE profile_views (
 
 inserer des view =
 INSERT INTO profile_views (userId, viewerId, viewDate)
-    -> VALUES 
-    -> (1, 2, NOW()), (1, 3, NOW() - INTERVAL 1 HOUR), (1, 4, NOW() - INTERVAL 2 HOUR),
-    -> (2, 1, NOW()), (2, 5, NOW() - INTERVAL 30 MINUTE), (2, 6, NOW() - INTERVAL 1 DAY),
-    -> (3, 4, NOW()), (3, 7, NOW() - INTERVAL 2 DAY), (3, 8, NOW() - INTERVAL 3 DAY),
-    -> (4, 5, NOW()), (4, 6, NOW() - INTERVAL 1 HOUR), (4, 7, NOW() - INTERVAL 4 HOUR),
-    -> (5, 1, NOW()), (5, 2, NOW() - INTERVAL 2 HOUR), (5, 3, NOW() - INTERVAL 1 DAY),
-    -> (6, 3, NOW()), (6, 4, NOW() - INTERVAL 30 MINUTE), (6, 5, NOW() - INTERVAL 12 HOUR),
-    -> (7, 8, NOW()), (7, 9, NOW() - INTERVAL 1 DAY), (7, 10, NOW() - INTERVAL 3 DAY),
-    -> (8, 9, NOW()), (8, 10, NOW() - INTERVAL 2 DAY), (8, 1, NOW() - INTERVAL 4 DAY),
-    -> (9, 1, NOW()), (9, 2, NOW() - INTERVAL 3 HOUR), (9, 3, NOW() - INTERVAL 1 WEEK),
-    -> (10, 5, NOW()), (10, 6, NOW() - INTERVAL 2 DAY), (10, 7, NOW() - INTERVAL 5 DAY);
+VALUES 
+    (1, 2, NOW()), 
+    (1, 3, NOW() - INTERVAL 1 HOUR), 
+    (1, 4, NOW() - INTERVAL 2 HOUR),
+    (2, 1, NOW()), 
+    (2, 5, NOW() - INTERVAL 30 MINUTE), 
+    (2, 6, NOW() - INTERVAL 1 DAY),
+    (3, 4, NOW()), 
+    (3, 7, NOW() - INTERVAL 2 DAY), 
+    (3, 8, NOW() - INTERVAL 3 DAY),
+    (4, 5, NOW()), 
+    (4, 6, NOW() - INTERVAL 1 HOUR), 
+    (4, 7, NOW() - INTERVAL 4 HOUR),
+    (5, 1, NOW()), 
+    (5, 2, NOW() - INTERVAL 2 HOUR), 
+    (5, 3, NOW() - INTERVAL 1 DAY),
+    (6, 3, NOW()), 
+    (6, 4, NOW() - INTERVAL 30 MINUTE), 
+    (6, 5, NOW() - INTERVAL 12 HOUR),
+    (7, 8, NOW()), 
+    (7, 9, NOW() - INTERVAL 1 DAY),
+    (8, 9, NOW()), 
+    (8, 1, NOW() - INTERVAL 4 DAY),
+    (9, 1, NOW()), 
+    (9, 2, NOW() - INTERVAL 3 HOUR), 
+    (9, 3, NOW() - INTERVAL 1 WEEK);
 
 
 LIKES =
@@ -335,16 +352,31 @@ CREATE TABLE likes (
 
 inserrer des likes = INSERT INTO likes (userId, likerId, likeDate)
 VALUES 
-(1, 2, NOW()), (1, 3, NOW() - INTERVAL 1 HOUR), (1, 4, NOW() - INTERVAL 2 HOUR),
-(2, 1, NOW()), (2, 5, NOW() - INTERVAL 30 MINUTE), (2, 6, NOW() - INTERVAL 1 DAY),
-(3, 4, NOW()), (3, 7, NOW() - INTERVAL 2 DAY), (3, 8, NOW() - INTERVAL 3 DAY),
-(4, 5, NOW()), (4, 6, NOW() - INTERVAL 1 HOUR), (4, 7, NOW() - INTERVAL 4 HOUR),
-(5, 1, NOW()), (5, 2, NOW() - INTERVAL 2 HOUR), (5, 3, NOW() - INTERVAL 1 DAY),
-(6, 3, NOW()), (6, 4, NOW() - INTERVAL 30 MINUTE), (6, 5, NOW() - INTERVAL 12 HOUR),
-(7, 8, NOW()), (7, 9, NOW() - INTERVAL 1 DAY), (7, 10, NOW() - INTERVAL 3 DAY),
-(8, 9, NOW()), (8, 10, NOW() - INTERVAL 2 DAY), (8, 1, NOW() - INTERVAL 4 DAY),
-(9, 1, NOW()), (9, 2, NOW() - INTERVAL 3 HOUR), (9, 3, NOW() - INTERVAL 1 WEEK),
-(10, 5, NOW()), (10, 6, NOW() - INTERVAL 2 DAY), (10, 7, NOW() - INTERVAL 5 DAY);
+    (1, 2, NOW()), 
+    (1, 3, NOW() - INTERVAL 1 HOUR), 
+    (1, 4, NOW() - INTERVAL 2 HOUR),
+    (2, 1, NOW()), 
+    (2, 5, NOW() - INTERVAL 30 MINUTE), 
+    (2, 6, NOW() - INTERVAL 1 DAY),
+    (3, 4, NOW()), 
+    (3, 7, NOW() - INTERVAL 2 DAY), 
+    (3, 8, NOW() - INTERVAL 3 DAY),
+    (4, 5, NOW()), 
+    (4, 6, NOW() - INTERVAL 1 HOUR), 
+    (4, 7, NOW() - INTERVAL 4 HOUR),
+    (5, 1, NOW()), 
+    (5, 2, NOW() - INTERVAL 2 HOUR), 
+    (5, 3, NOW() - INTERVAL 1 DAY),
+    (6, 3, NOW()), 
+    (6, 4, NOW() - INTERVAL 30 MINUTE), 
+    (6, 5, NOW() - INTERVAL 12 HOUR),
+    (7, 8, NOW()), 
+    (7, 9, NOW() - INTERVAL 1 DAY),
+    (8, 9, NOW()), 
+    (8, 1, NOW() - INTERVAL 4 DAY),
+    (9, 1, NOW()), 
+    (9, 2, NOW() - INTERVAL 3 HOUR), 
+    (9, 3, NOW() - INTERVAL 1 WEEK);
 
 
 CONNEXION =
@@ -358,16 +390,15 @@ CREATE TABLE user_sessions (
 inserer des connexion =
 INSERT INTO user_sessions (userId, sessionDate)
 VALUES 
-(1, NOW()), (1, NOW() - INTERVAL 1 DAY), (1, NOW() - INTERVAL 3 DAY),
-(2, NOW()), (2, NOW() - INTERVAL 2 DAY), (2, NOW() - INTERVAL 5 DAY),
-(3, NOW()), (3, NOW() - INTERVAL 1 HOUR), (3, NOW() - INTERVAL 4 DAY),
-(4, NOW()), (4, NOW() - INTERVAL 6 HOUR), (4, NOW() - INTERVAL 10 DAY),
-(5, NOW()), (5, NOW() - INTERVAL 3 DAY), (5, NOW() - INTERVAL 7 DAY),
-(6, NOW()), (6, NOW() - INTERVAL 12 HOUR), (6, NOW() - INTERVAL 15 DAY),
-(7, NOW()), (7, NOW() - INTERVAL 1 DAY), (7, NOW() - INTERVAL 9 DAY),
-(8, NOW()), (8, NOW() - INTERVAL 5 DAY), (8, NOW() - INTERVAL 11 DAY),
-(9, NOW()), (9, NOW() - INTERVAL 2 HOUR), (9, NOW() - INTERVAL 8 DAY),
-(10, NOW()), (10, NOW() - INTERVAL 4 DAY), (10, NOW() - INTERVAL 14 DAY);
+    (1, NOW()), (1, NOW() - INTERVAL 1 DAY), (1, NOW() - INTERVAL 3 DAY),
+    (2, NOW()), (2, NOW() - INTERVAL 2 DAY), (2, NOW() - INTERVAL 5 DAY),
+    (3, NOW()), (3, NOW() - INTERVAL 1 HOUR), (3, NOW() - INTERVAL 4 DAY),
+    (4, NOW()), (4, NOW() - INTERVAL 6 HOUR), (4, NOW() - INTERVAL 10 DAY),
+    (5, NOW()), (5, NOW() - INTERVAL 3 DAY), (5, NOW() - INTERVAL 7 DAY),
+    (6, NOW()), (6, NOW() - INTERVAL 12 HOUR), (6, NOW() - INTERVAL 15 DAY),
+    (7, NOW()), (7, NOW() - INTERVAL 1 DAY), (7, NOW() - INTERVAL 9 DAY),
+    (8, NOW()), (8, NOW() - INTERVAL 5 DAY), (8, NOW() - INTERVAL 11 DAY),
+    (9, NOW()), (9, NOW() - INTERVAL 2 HOUR), (9, NOW() - INTERVAL 8 DAY);
 
 
 BLOCK = 
@@ -388,11 +419,10 @@ VALUES
 (3, 6, NOW()), 
 (4, 7, NOW()), (4, 8, NOW() - INTERVAL 3 DAY),
 (5, 9, NOW()), 
-(6, 10, NOW()), 
+(6, 9, NOW()), 
 (7, 1, NOW() - INTERVAL 1 DAY), 
 (8, 2, NOW() - INTERVAL 5 DAY), 
-(9, 3, NOW() - INTERVAL 2 WEEK), 
-(10, 4, NOW());
+(9, 3, NOW() - INTERVAL 2 WEEK);
 
 =============================================================================
                       API LOCALISATION
@@ -401,3 +431,24 @@ larazanetti@outlook.fr
 Ericlara04?
 
 dependance : npm install axios
+
+UPDATE utilisateurs 
+SET localisation = 
+    CASE 
+        WHEN id % 3 = 1 THEN 'Paris' 
+        WHEN id % 3 = 2 THEN 'Bordeaux' 
+        ELSE 'Dijon' 
+    END,
+    lat = 
+    CASE 
+        WHEN id % 3 = 1 THEN 48.8588897 
+        WHEN id % 3 = 2 THEN 44.841225 
+        ELSE 47.3215806 
+    END,
+    lon = 
+    CASE 
+        WHEN id % 3 = 1 THEN 2.320041 
+        WHEN id % 3 = 2 THEN -0.5800364 
+        ELSE 5.0414701 
+    END
+WHERE id BETWEEN 1 AND 9;
