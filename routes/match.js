@@ -2,7 +2,7 @@ import express from "express";
 import verifyToken from "../middlewares/authMiddleware.js";
 import pool from "../database.js";
 import { getPotentialMatches, getCommonTags, getFameRatting, calculateDistance } from "../matching.js";
-import { applyAgeFilter, filterMatchesByCommonTags, filterMatchesByFameRating } from "../filter.js";
+import { applyAgeFilter, filterMatchesByCommonTags, filterMatchesByFameRating, FilterLocalisation } from "../filter.js";
 
 const router = express.Router();
 
@@ -18,14 +18,8 @@ router.get('/:userId', verifyToken, async (req, res) => {
             return res.status(404).json({ message: 'Aucun match trouvé' });
         }
 
-        matches.forEach(match => {
-            console.log(`AVANT FILTRE : ID: ${match.id}`);
-        });
-        
-        // 2. Vérifier si un filtre d'âge est fourni
-        const ageDiff = req.query.ageDiff;  // Récupérer le paramètre ageDiff de la requête
-
-        // 3. Si un filtre d'âge est sélectionné, appliquer le filtrage
+//==================================FILTRE AGE=========================================//
+        const ageDiff = req.query.ageDiff;
         if (ageDiff) {
             const { matches: filteredMatches, message } = await applyAgeFilter(pool, userId, ageDiff, matches);
             
@@ -44,12 +38,11 @@ router.get('/:userId', verifyToken, async (req, res) => {
             return res.status(200).json(matches);
         }
 
-        // 2. Vérifier si le filtre "tags communs" est activé dans la requête
-        const filterTags = req.query.filterTags; // Récupérer le paramètre filterTags
+//===================================FILTRE TAGS====================================//
+        const filterTags = req.query.filterTags; 
         const minCommonTags =  req.query.minCommonTags ? parseInt(req.query.minCommonTags) : 1;
-
         if (filterTags === 'true') {
-            // Si le filtre des tags communs est activé, appliquer le filtrage
+
             matches = await filterMatchesByCommonTags(pool, userId, matches, minCommonTags);
             if (matches.length === 0) {
                 return res.status(404).json({ message: 'Aucun match trouvé avec les tags communs' });
@@ -60,22 +53,20 @@ router.get('/:userId', verifyToken, async (req, res) => {
             return res.status(200).json(matches);
         }
 
-        const filterFameRating = req.query.famerating; // Récupérer le paramètre filterTags
+//==================================FILTRE FAMERATING=========================================//
+        const filterFameRating = req.query.famerating; 
         let minFameRating = req.query.minFameRating ? parseFloat(req.query.minFameRating) : 1;
 
-        //Vérifier si la valeur est un nombre entre 0 et 5 avec un chiffre après la virgule
         if (isNaN(minFameRating) || minFameRating < 0) {
             minFameRating = 0;
         } else if (minFameRating > 5) {
             minFameRating = 5;
         } else {
-            // Limiter à 1 chiffre après la virgule
             minFameRating = Math.round(minFameRating * 10) / 10;
         }
 
-        console.log("minFameRating ", minFameRating); // Pour vérifier la valeur finale
         if (filterFameRating === 'true') {
-            // Si le filtre des tags communs est activé, appliquer le filtrage
+
             matches = await filterMatchesByFameRating(pool, userId, matches, minFameRating);
             if (matches.length === 0) {
                 return res.status(404).json({ message: 'Aucun match trouvé avec la famerating' });
@@ -85,9 +76,23 @@ router.get('/:userId', verifyToken, async (req, res) => {
             });
             return res.status(200).json(matches);
         }
+//================================FILTRE LOCALISATION==================================//
+        const Locdiff = req.query.Loc; 
+        if (Locdiff) {
 
+            matches = await FilterLocalisation(pool, userId, Locdiff, matches);
+            
+            if (matches.length === 0) {
+                return res.status(404).json({ message: 'Aucun match dans ce rayon de kilometre' });
+            }
+            matches.forEach(match => {
+                console.log(`ID: ${match.id}`);
+            });
+            return res.status(200).json(matches);
+        }
 
-        // 2. Appeler `getCommonTags` pour filtrer les matchs par tags communs
+//==============================ALGO NORMAL=======================================//
+
         matches = await getCommonTags(pool, userId, matches);
 
         // Vérifier si nous avons des matchs après le filtrage des tags

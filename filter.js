@@ -67,6 +67,89 @@ export async function applyAgeFilter(pool, userId, ageDiff, matches) {
     }
 }
 
+
+export async function FilterLocalisation(pool, userId, Locdiff, matches){
+    try {
+
+        if (Locdiff != '2' && Locdiff != '5' && Locdiff != '10' && Locdiff != '15' && Locdiff != '20'
+            && Locdiff != '30' && Locdiff != '50' && Locdiff != '100' && Locdiff != '500'
+            && Locdiff != '1000') {
+            return res.status(404).json({ error: "Distance non valide" });  
+        }
+        
+        if (matches.length === 0) {
+            return res.status(404).json({ message: 'Aucun match trouvé a cette distance' });
+        }
+
+        const results = [];
+
+        const [userCoordinatesResult] = await pool.query(
+            "SELECT lat, lon FROM utilisateurs WHERE id = ?",
+            [userId]
+        );
+
+        if (userCoordinatesResult.length === 0) {
+            res.status(404).json({ error: "Utilisateur non trouvé." });
+            return results;
+        }
+
+        const userLat = userCoordinatesResult[0].lat;
+        const userLon = userCoordinatesResult[0].lon;
+
+        if (userLat.length < 0 || userLon.length < 0) {
+            console.log("userLat", userLat, " || userlon ", userLon)
+            return results;
+        }
+
+        for (let match of matches) {
+
+            const [matchCoordinatesResult] = await pool.query(
+                "SELECT lat, lon FROM utilisateurs WHERE id = ?",
+                [match.id]
+            );
+
+            if (matchCoordinatesResult.length > 0) {
+                const matchLat = matchCoordinatesResult[0].lat;
+                const matchLon = matchCoordinatesResult[0].lon;
+
+                const distance = calculateDistance(userLat, userLon, matchLat, matchLon);
+                match.distance = distance;
+                //console.log("match.distance = ", match.distance, " || Locdiff ", Locdiff);
+                match.distance = parseFloat(match.distance, 10);
+                Locdiff = parseFloat(Locdiff, 10);
+               // console.log(typeof Locdiff, " || ", typeof match.distance);
+                
+                if (match.distance <= Locdiff) {
+                    results.push({
+                        ...match,
+                        distance
+                    });
+                }
+            }
+        }
+
+        if (results.length === 0) {
+            console.log("⚠️ Aucun match trouvé das ce rayon de km.");
+            return results; // Retourner les matchs sans les trier si aucun tag commun
+        }
+
+        // 4. Trier les résultats par nombre de tags communs
+        results.sort((a, b) => b.distance - a.distance);
+        results.forEach(match => {
+            console.log(`ID: ${match.id} , distance = ${match.distance}`);
+        });
+        return results;
+
+    } catch (err) {
+        console.error('Erreur lors de la récupération des matchs:', error);
+        return matches;  // Retourner les matchs sans les modifier en cas d'erreur
+    }
+}
+
+
+
+
+
 export async function filterMatchesByCommonTags(pool, userId, matches, minCommonTags) {
     try {
         console.log(`🔍 Début de getCommonTags pour userId: ${userId}`);
@@ -171,4 +254,4 @@ export async function filterMatchesByFameRating(pool, userId, matches, minFameRa
     }
 }
 
-export default { applyAgeFilter, filterMatchesByCommonTags, filterMatchesByFameRating };
+export default { applyAgeFilter, filterMatchesByCommonTags, filterMatchesByFameRating, FilterLocalisation };
