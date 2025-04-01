@@ -46,10 +46,11 @@ router.get('/:userId', verifyToken, async (req, res) => {
 
         // 2. Vérifier si le filtre "tags communs" est activé dans la requête
         const filterTags = req.query.filterTags; // Récupérer le paramètre filterTags
+        const minCommonTags =  req.query.minCommonTags ? parseInt(req.query.minCommonTags) : 1;
 
         if (filterTags === 'true') {
             // Si le filtre des tags communs est activé, appliquer le filtrage
-            matches = await filterMatchesByCommonTags(pool, userId, matches);
+            matches = await filterMatchesByCommonTags(pool, userId, matches, minCommonTags);
             if (matches.length === 0) {
                 return res.status(404).json({ message: 'Aucun match trouvé avec les tags communs' });
             }

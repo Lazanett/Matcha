@@ -66,7 +66,7 @@ export async function applyAgeFilter(pool, userId, ageDiff, matches) {
     }
 }
 
-export async function filterMatchesByCommonTags(pool, userId, matches) {
+export async function filterMatchesByCommonTags(pool, userId, matches, minCommonTags) {
     try {
         console.log(`🔍 Début de getCommonTags pour userId: ${userId}`);
 
@@ -79,7 +79,7 @@ export async function filterMatchesByCommonTags(pool, userId, matches) {
 
         // 2. Parcourir les matchs pour comparer les tags
         const results = [];
-
+        console.log("minCommonTags =", minCommonTags);
         for (let match of matches) {
             const matchId = match.id;  // Ajusté en fonction du log
 
@@ -97,21 +97,18 @@ export async function filterMatchesByCommonTags(pool, userId, matches) {
             const commonTagsCount = matchTags.filter(tag => userTags.includes(tag)).length;
 
             console.log(`🔥 Nombre de tags communs avec ${matchId}: ${commonTagsCount}`);
-
-           // Inclure même les matchs sans tags communs
-           if (commonTagsCount > 0) {
-                results.push({
-                    ...match,
-                    commonTagsCount
-                });
-           }
+            if (commonTagsCount >= minCommonTags) {
+                    results.push({
+                        ...match,
+                        commonTagsCount
+                    });
+            }
                 
         }
-
         // 3. Si aucun tag commun n'a été trouvé, ne pas changer l'ordre des matchs
         if (results.length === 0) {
             console.log("⚠️ Aucun tag commun trouvé. Renvoi des matchs sans changement d'ordre.");
-            return matches; // Retourner les matchs sans les trier si aucun tag commun
+            return results; // Retourner les matchs sans les trier si aucun tag commun
         }
 
         // 4. Trier les résultats par nombre de tags communs
