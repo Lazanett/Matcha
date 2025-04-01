@@ -2,7 +2,7 @@ import express from "express";
 import verifyToken from "../middlewares/authMiddleware.js";
 import pool from "../database.js";
 import { getPotentialMatches, getCommonTags, getFameRatting, calculateDistance } from "../matching.js";
-import { applyAgeFilter } from "../filter.js";
+import { applyAgeFilter, filterMatchesByCommonTags } from "../filter.js";
 
 const router = express.Router();
 
@@ -43,6 +43,22 @@ router.get('/:userId', verifyToken, async (req, res) => {
             });
             return res.status(200).json(matches);
         }
+
+        // 2. Vérifier si le filtre "tags communs" est activé dans la requête
+        const filterTags = req.query.filterTags; // Récupérer le paramètre filterTags
+
+        if (filterTags === 'true') {
+            // Si le filtre des tags communs est activé, appliquer le filtrage
+            matches = await filterMatchesByCommonTags(pool, userId, matches);
+            if (matches.length === 0) {
+                return res.status(404).json({ message: 'Aucun match trouvé avec les tags communs' });
+            }
+            matches.forEach(match => {
+                console.log(`ID: ${match.id}`);
+            });
+            return res.status(200).json(matches);
+        }
+
         // 2. Appeler `getCommonTags` pour filtrer les matchs par tags communs
         matches = await getCommonTags(pool, userId, matches);
 

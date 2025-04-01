@@ -130,6 +130,11 @@ VALUES
     (UUID(), 'user8@example.com', SHA2('Elodieelodie@1', 256), 'Fournier', 'Elodie', 'elodieF', 27, 'F', 'O', FALSE),
     (UUID(), 'user9@example.com', SHA2('Thomastomas@1', 256), 'Girard', 'Thomas', 'thomasG', 31, 'M', 'F', FALSE);
 
+
+ALTER TABLE utilisateurs
+ADD COLUMN localisation VARCHAR(255) DEFAULT NULL,
+ADD COLUMN lon DOUBLE DEFAULT 0,
+ADD COLUMN lat DOUBLE DEFAULT 0;
 {
   "nom": "test",
   "prenom": "test",
@@ -337,6 +342,7 @@ VALUES
     (8, 1, NOW() - INTERVAL 4 DAY),
     (9, 1, NOW()), 
     (9, 2, NOW() - INTERVAL 3 HOUR), 
+    (9, 3, NOW() - INTERVAL 1 WEEK),
     (9, 3, NOW() - INTERVAL 1 WEEK);
 
 
@@ -451,4 +457,4 @@ SET localisation =
         WHEN id % 3 = 2 THEN -0.5800364 
         ELSE 5.0414701 
     END
-WHERE id BETWEEN 1 AND 9;
+WHERE id BETWEEN 1 AND 10;
