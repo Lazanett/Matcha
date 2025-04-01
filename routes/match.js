@@ -2,7 +2,7 @@ import express from "express";
 import verifyToken from "../middlewares/authMiddleware.js";
 import pool from "../database.js";
 import { getPotentialMatches, getCommonTags, getFameRatting, calculateDistance } from "../matching.js";
-import { applyAgeFilter, filterMatchesByCommonTags } from "../filter.js";
+import { applyAgeFilter, filterMatchesByCommonTags, filterMatchesByFameRating } from "../filter.js";
 
 const router = express.Router();
 
@@ -59,6 +59,33 @@ router.get('/:userId', verifyToken, async (req, res) => {
             });
             return res.status(200).json(matches);
         }
+
+        const filterFameRating = req.query.famerating; // Récupérer le paramètre filterTags
+        let minFameRating = req.query.minFameRating ? parseFloat(req.query.minFameRating) : 1;
+
+        //Vérifier si la valeur est un nombre entre 0 et 5 avec un chiffre après la virgule
+        if (isNaN(minFameRating) || minFameRating < 0) {
+            minFameRating = 0;
+        } else if (minFameRating > 5) {
+            minFameRating = 5;
+        } else {
+            // Limiter à 1 chiffre après la virgule
+            minFameRating = Math.round(minFameRating * 10) / 10;
+        }
+
+        console.log("minFameRating ", minFameRating); // Pour vérifier la valeur finale
+        if (filterFameRating === 'true') {
+            // Si le filtre des tags communs est activé, appliquer le filtrage
+            matches = await filterMatchesByFameRating(pool, userId, matches, minFameRating);
+            if (matches.length === 0) {
+                return res.status(404).json({ message: 'Aucun match trouvé avec la famerating' });
+            }
+            matches.forEach(match => {
+                console.log(`ID: ${match.id}`);
+            });
+            return res.status(200).json(matches);
+        }
+
 
         // 2. Appeler `getCommonTags` pour filtrer les matchs par tags communs
         matches = await getCommonTags(pool, userId, matches);

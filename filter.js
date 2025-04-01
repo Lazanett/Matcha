@@ -1,4 +1,5 @@
 import axios from 'axios';
+import {  getFameRatting, calculateDistance } from "./matching.js";
 
 export async function filterMatchesByAge(matches, ageDiff, userAge) {
     try {
@@ -126,4 +127,48 @@ export async function filterMatchesByCommonTags(pool, userId, matches, minCommon
     }
 }
 
-export default { applyAgeFilter, filterMatchesByCommonTags };
+
+export async function filterMatchesByFameRating(pool, userId, matches, minFameRating) {
+
+    try {
+        const results = [];
+        for (let match of matches) {
+            const matchId = match.id;  // Ajusté en fonction du log
+
+            if (!matchId) {
+                console.log('⚠️ Erreur: Aucun ID trouvé pour ce match, il sera ignoré.');
+                continue;
+            }
+
+            const rate = await getFameRatting(pool, matchId);
+            //console.log(`🔥 Nombre de tags communs avec ${matchId}: ${commonTagsCount}`);
+            if (rate >= minFameRating) {
+                results.push({
+                    ...match,
+                    rate
+                });
+            }
+            console.log("rate = ", rate, " || minFameRating = ", minFameRating);
+            console.log(typeof rate);
+            console.log(typeof minFameRating);
+        }
+        console.log("FILTRE FAMERATTING");
+        if (results.length === 0) {
+            console.log("⚠️ Aucun tag commun trouvé. Renvoi des matchs sans changement d'ordre.");
+            return results; // Retourner les matchs sans les trier si aucun tag commun
+        }
+
+        // 4. Trier les résultats par nombre de tags communs
+        results.sort((a, b) => b.rate - a.rate);
+
+        results.forEach(match => {
+            console.log(`ID: ${match.id} , rate = ${match.rate}`);
+        });
+        return results;
+    } catch (error) {
+        console.error('Erreur lors de la récupération des matchs:', error);
+        return matches;  // Retourner les matchs sans les modifier en cas d'erreur
+    }
+}
+
+export default { applyAgeFilter, filterMatchesByCommonTags, filterMatchesByFameRating };

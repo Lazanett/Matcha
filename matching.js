@@ -192,33 +192,33 @@ export async function getFameRatting(pool, userId) {
         const blocks = blocksResult[0].blocks || 0;
 
         // DEBUG Log des valeurs récupérées
-        console.log(`Utilisateur ${userId}:`);
-        console.log(`Vues: ${views}`);
-        console.log(`Likes: ${likes}`);
-        console.log(`Bloquages: ${blocks}`);
-        console.log(`Connexions: ${connections}`);
+        // console.log(`Utilisateur ${userId}:`);
+        // console.log(`Vues: ${views}`);
+        // console.log(`Likes: ${likes}`);
+        // console.log(`Bloquages: ${blocks}`);
+        // console.log(`Connexions: ${connections}`);
 
         // Augmenter l'influence des connexions (car elles sont rares)
         const maxConnections = 10; // Réduction du max pour donner plus de poids
         const connectionScore = Math.min(connections / maxConnections, 1) * 40; // Score max = 40
 
-        console.log(`Score de connexion (normalisé): ${connectionScore}`);
+        //console.log(`Score de connexion (normalisé): ${connectionScore}`);
 
         // Ajustement des coefficients pour booster les scores
         let fameRating = (views * 0.4) + (likes * 0.5) + (connections * 0.4) - (blocks * 0.25);
 
-        console.log(`Fame Rating brut: ${fameRating}`);
+        //console.log(`Fame Rating brut: ${fameRating}`);
 
         // Changer la normalisation pour éviter des scores trop bas
         let normalizedFameRating = (fameRating / 20) * 5; // Réduction du diviseur pour booster la note
-        console.log(`Fame Rating normalisé avant limitation: ${normalizedFameRating}`);
+        //console.log(`Fame Rating normalisé avant limitation: ${normalizedFameRating}`);
 
         // Appliquer une note de base minimale
         normalizedFameRating = Math.max(normalizedFameRating, 0.5);
 
         // Limitation max à 5
         normalizedFameRating = Math.min(normalizedFameRating, 5);
-        console.log(`Fame Rating (limité à 5): ${normalizedFameRating}`);
+        //console.log(`Fame Rating (limité à 5): ${normalizedFameRating}`);
 
         // Arrondir à 1 chiffre après la virgule
         normalizedFameRating = parseFloat(normalizedFameRating.toFixed(1));

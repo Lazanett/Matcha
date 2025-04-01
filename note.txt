@@ -459,4 +459,6 @@ SET localisation =
     END
 WHERE id BETWEEN 1 AND 10;
 
+http://localhost:5000/match/2?ageDiff=2
 http://localhost:5000/match/3?filterTags=true&minCommonTags=3
+http://localhost:5000/match/2?famerating=true&minFameRating=0.6
