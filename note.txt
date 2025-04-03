@@ -457,7 +457,7 @@ SET localisation =
         WHEN id % 3 = 2 THEN -0.5800364 
         ELSE 5.0414701 
     END
-WHERE id BETWEEN 1 AND 10;
+WHERE id BETWEEN 1 AND 9;
 
 http://localhost:5000/match/2?ageDiff=2
 http://localhost:5000/match/3?filterTags=true&minCommonTags=3

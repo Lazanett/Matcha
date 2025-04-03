@@ -77,6 +77,7 @@ export async function FilterLocalisation(pool, userId, Locdiff, matches){
             return res.status(404).json({ error: "Distance non valide" });  
         }
         
+
         if (matches.length === 0) {
             return res.status(404).json({ message: 'Aucun match trouvé a cette distance' });
         }
@@ -100,7 +101,7 @@ export async function FilterLocalisation(pool, userId, Locdiff, matches){
             console.log("userLat", userLat, " || userlon ", userLon)
             return results;
         }
-
+        console.log("FILTRE LOCALISATION");
         for (let match of matches) {
 
             const [matchCoordinatesResult] = await pool.query(
@@ -112,12 +113,12 @@ export async function FilterLocalisation(pool, userId, Locdiff, matches){
                 const matchLat = matchCoordinatesResult[0].lat;
                 const matchLon = matchCoordinatesResult[0].lon;
 
-                const distance = calculateDistance(userLat, userLon, matchLat, matchLon);
+                const distance = await calculateDistance(userLat, userLon, matchLat, matchLon);
                 match.distance = distance;
                 //console.log("match.distance = ", match.distance, " || Locdiff ", Locdiff);
                 match.distance = parseFloat(match.distance, 10);
                 Locdiff = parseFloat(Locdiff, 10);
-               // console.log(typeof Locdiff, " || ", typeof match.distance);
+                //console.log(typeof Locdiff, " || ", typeof match.distance);
                 
                 if (match.distance <= Locdiff) {
                     results.push({
@@ -134,10 +135,7 @@ export async function FilterLocalisation(pool, userId, Locdiff, matches){
         }
 
         // 4. Trier les résultats par nombre de tags communs
-        results.sort((a, b) => b.distance - a.distance);
-        results.forEach(match => {
-            console.log(`ID: ${match.id} , distance = ${match.distance}`);
-        });
+        results.sort((a, b) => a.distance - b.distance);
         return results;
 
     } catch (err) {
@@ -145,10 +143,6 @@ export async function FilterLocalisation(pool, userId, Locdiff, matches){
         return matches;  // Retourner les matchs sans les modifier en cas d'erreur
     }
 }
-
-
-
-
 
 export async function filterMatchesByCommonTags(pool, userId, matches, minCommonTags) {
     try {
